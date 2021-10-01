@@ -237,21 +237,23 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == updateTextFieldObserverButton) {
-            // text field를 누르면 해당 window 옵저버 구독
+            	// start 버튼 누르면 해당 window 옵저버 구독
             if (updateTextFieldObserverButton.getText().equals(START_TEXT_FIELD)) {
                 subscribe(textFieldWindow);
                 updateTextFieldObserverButton.setText(STOP_TEXT_FIELD);
             } else {
-								// 구독 취소
+		// stop 구독 취소
                 unSubscribe(textFieldWindow);
                 updateTextFieldObserverButton.setText(START_TEXT_FIELD);
             }
         }
         else if (e.getSource() == updateLabelObserverButton) {
+            	// start 버튼 누르면 해당 window 옵저버 구독	
             if (updateLabelObserverButton.getText().equals(START_LABEL_FIELD)) {
                 subscribe(labelWindow);
                 updateLabelObserverButton.setText(STOP_LABEL_FIELD);
             } else {
+		// stop 구독 취소
                 unSubscribe(labelWindow);
                 updateLabelObserverButton.setText(START_LABEL_FIELD);
             }
@@ -262,8 +264,8 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
 
     private JButton createButton(String text, ActionListener listener, int width, int height) {
         /*
-					버튼 생성 로직
-				*/
+            버튼 생성 로직
+	*/
     }
 
     public static void main(String[] args) {
@@ -304,5 +306,7 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
 
 ### 결과
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/135633274-bca0a406-60be-48bf-85a7-14feb2025d67.gif)
+- start를 누르면 구독 : 소수가 생성되는 통보를 계속 받고 화면에 나타낸다.
+- stop을 누르면 구독취소 : 더이상 화면의 소수를 업데이트하지 않는다.
 
 ## 4. 데코레이터 패턴 _ Decorator

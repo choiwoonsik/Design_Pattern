@@ -1,5 +1,13 @@
 # 디자인 패턴 학습 정리
 
+### 목차
+
+1. [다형성](#1-다형성)
+2. [Strategy Pattern](#2-전략-패턴-_-strategy)
+3. [Observer Pattern](#3-옵저버-패턴-_-observer)
+4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
+5. [...](#5)
+
 ## 1. 다형성
 - 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.
 - 부모 클래스 타입의 참조변수로 여러 자식 클래스 타입의 인스턴스를 참조할 수 있다.
@@ -310,3 +318,170 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
 - stop을 누르면 구독취소 : 더이상 화면의 소수를 업데이트하지 않는다.
 
 ## 4. 데코레이터 패턴 _ Decorator
+
+- 객체에 추가적인 요건을 동적으로 추가해주는 패턴으로, 서브 클래스를 만들지 않고
+기능을 유연하게 확장할 수 있게 한다.
+- 데코레이터 패턴에서의 상속은 공통적인 타입으로 추상화하기 위한 용도가 주 목적이다.
+- 데코레이터는 인터페이스/추상 클래스로서 역활을 하고 이를 상속받은 클래스들은 
+컴포넌트를 꾸미기 위한 구현을 갖게 된다.
+- 컴포넌트는 바로 사용되거나 데코레이터레가 붙어서 사용될 수 있다.
+
+> 예시
+> 
+- 커피를 생각해보면 에스프레소, 콜드블루는 컴포넌트가 될 수 있고
+얼음, 시나몬 가루, 우유, 두유, 샷, 자바칩 등은 모두 데코레이터 클래스를 상속받은
+데코를 위한 클래스가 될 수 있다.
+- 이때, 최상위 추상 클래스/인터페이스를 Beverage로 두고 에스프레소, 콜드블루 컴포넌트는 Beverage를 상속받는다.
+- 데코들의 추상화를 위해 Beverage를 상속받은 BeverageDecorator를 선언하고, 
+모든 데코 용 클래스들은 BeverageDecorator를 상속받는다.
+- 형태 → 자바칩 ( 우유 ( 얼음 ( 얼음 ( 샷 ( 에스프레소 ) ) ) ) ), 이때 순서는 상관이 없다.
+
+### 다이어그램
+
+<img width="746" alt="스크린샷 2021-10-03 오후 5 42 36" src="https://user-images.githubusercontent.com/42247724/135746322-2f966aae-9257-42aa-a3f5-6365ca2c6ac4.png">
+
+- Display 추상 클래스를 최상위 클래스로 두고 기본 컴포넌트로 HudDisplay를 갖는다.
+- HudDisplay를 꾸밀 수 있는 Deco용 클래스들의 추상화 용도로 Display를 상속한 추상 클래스 DisplayDecorator를 둔다.
+- Message, Time, Weater, Speed 클래스들은 DisplayDecorator를 상속받아서 구현한다.
+- 결국 데코 클래스도 Display 클래스의 하위 클래스로서 데코클래스에서 반환한 클래스에 대해
+ 데코를 반복할 수 있게 된다.
+
+### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MainWindow.java#L22)
+
+```java
+public class MainWindow extends FrameWindow {
+    private static final String MAIN_TITLE = "woonsik's Window";
+    private static final int X = 250;
+    private static final int Y = 100;
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 100;
+
+    private ArrayList<String> displayList;
+    private JFrame frame;
+
+    public MainWindow(String title, ArrayList<String> list) {
+        displayList = list;
+        frame = createWindow(title, X, Y, WIDTH, HEIGHT * (displayList.size() + 1));
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                closeWindow();
+                System.exit(0);
+            }
+        });
+    }
+
+    public JFrame createWindow(String title, int x, int y, int width, int totalHeight) {
+        JFrame frame;
+        frame = new JFrame(title);
+        frame.setBounds(x, y, width, totalHeight);
+
+        JPanel panel = createPanel(width, totalHeight);
+        frame.getContentPane().add(panel);
+        frame.pack();
+        frame.setVisible(true);
+        return frame;
+    }
+
+    public void closeWindow() {
+        frame.setVisible(false);
+        frame.dispose();
+    }
+
+    public JPanel createPanel(int width, int totalHeight) {
+        // 제일 바탕에 놓일 패널 생성
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setMinimumSize(new Dimension(width, totalHeight));
+        panel.setPreferredSize(new Dimension(width, totalHeight));
+
+        Display display = new HudDisplay(WIDTH, HEIGHT);
+
+        // 새로운 장식이 추가될 때마다 새로운 패널이 생성되고, 그 안에 기존 패널이 추가된다.
+        for (String name : displayList) {
+            if (name.equals("speed")) {
+                display = new SpeedometerDisplay(display, WIDTH, HEIGHT);
+            }
+            else if (name.equals("time")) {
+                display = new TimeDisplay(display, WIDTH, HEIGHT);
+            }
+            else if (name.equals("weather")) {
+                display = new WeatherDisplay(display, WIDTH, HEIGHT);
+            }
+            else if (name.equals("message")) {
+                display = new MessageDisplay(display, WIDTH, HEIGHT);
+            }
+        }
+        // 장식이 모두 끝나면 최종 디스플레이 패널을 생성함.
+        panel.add(display.create());
+
+        // 높이를 출력
+        System.out.println("disply.totalHeight = " + display.getHeight());
+
+        // 디스플레이마다 각각의 내용을 화면에 보임
+        display.show();
+        return panel;
+    }
+
+    public static void main(String[] args) {
+        final String displayFileName = "displays.txt";
+        ArrayList<String> list;
+
+        LoadHudDisplays loadDisplay = new LoadHudDisplays(displayFileName);
+        list = loadDisplay.load();
+
+        System.out.printf("display.size() = %d\n", list.size());
+        for (String s : list) {
+            System.out.println(s);
+        }
+
+        new MainWindow(MainWindow.MAIN_TITLE, list);
+    }
+}
+```
+
+### 설명
+
+main() → MainWindow() → createWindow() → createPanel()
+
+- createPanel 에서 기본 컴포넌트로서 HudDisplay를 만든다. _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MainWindow.java#L58)
+- 이후 display.txt파일에 작성된 순서대로 디스플레이에 기능 목록을 추가한다.
+- 데코 용 클래스 :  [MessageDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MessageDisplay.java), [SpeedmeterDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/SpeedmeterDisplay.java), [TimeDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/TimeDisplay.java), [WeatherDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/WeatherDisplay.java)
+
+### 로직
+
+> Display 클래스를 상속한 DisplayDecorator 클래스는 데코 들의 추상 클래스. 이 추상 클래스를 여러 데코 용 클래스들이 상속받아서 데코를 하게 된다. 
+
+display.txt파일을 읽고 해당 순서대로 Deco클래스들을 감싸게 되고 마지막에 감싼 구현 클래스의 display.create()를 호출하게 된다.
+
+해당 구현 클래스의 create 메소드를 들어가면 전달 받은 클래스의 create()를 전달받아서 처리한다. 따라서 최초의 컴포넌트 create()까지 들어가고 반환되면서 최종 create()까지 호출이 된다.
+> 
+
+### 결과
+
+displays.txt
+
+```java
+time
+weather
+speed
+speed
+time
+message
+```
+
+<img width="712" alt="스크린샷 2021-10-03 오후 6 22 13" src="https://user-images.githubusercontent.com/42247724/135747719-5154b0bc-e98f-4f66-a89b-2a4b401de262.png">
+형태 → message ( time ( speed ( speed ( weather ( time ( HudDisplay ) ) ) ) ) )
+
+displays.txt
+
+```java
+message
+speed
+time
+weather
+time
+```
+
+<img width="712" alt="스크린샷 2021-10-03 오후 6 23 27" src="https://user-images.githubusercontent.com/42247724/135747724-2609983d-5212-48a9-8a4e-3ee1d08dd608.png">
+형태 → message ( speed ( time ( weather ( time ( HudDisplay ) ) ) ) )

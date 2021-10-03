@@ -326,8 +326,8 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
 컴포넌트를 꾸미기 위한 구현을 갖게 된다.
 - 컴포넌트는 바로 사용되거나 데코레이터레가 붙어서 사용될 수 있다.
 
-> 예시
-> 
+#### 예시
+- 데코레이터 패턴을 일상생활의 예시로 커피를 들 수 있다. 
 - 커피를 생각해보면 에스프레소, 콜드블루는 컴포넌트가 될 수 있고
 얼음, 시나몬 가루, 우유, 두유, 샷, 자바칩 등은 모두 데코레이터 클래스를 상속받은
 데코를 위한 클래스가 될 수 있다.
@@ -451,10 +451,10 @@ main() → MainWindow() → createWindow() → createPanel()
 ### 로직
 
 > Display 클래스를 상속한 DisplayDecorator 클래스는 데코 들의 추상 클래스. 이 추상 클래스를 여러 데코 용 클래스들이 상속받아서 데코를 하게 된다. 
-
-display.txt파일을 읽고 해당 순서대로 Deco클래스들을 감싸게 되고 마지막에 감싼 구현 클래스의 display.create()를 호출하게 된다.
-
-해당 구현 클래스의 create 메소드를 들어가면 전달 받은 클래스의 create()를 전달받아서 처리한다. 따라서 최초의 컴포넌트 create()까지 들어가고 반환되면서 최종 create()까지 호출이 된다.
+>
+>display.txt파일을 읽고 해당 순서대로 Deco클래스들을 감싸게 되고 마지막에 감싼 구현 클래스의 display.create()를 호출하게 된다.
+>
+>해당 구현 클래스의 create 메소드를 들어가면 전달 받은 클래스의 create()를 전달받아서 처리한다. 따라서 최초의 컴포넌트 create()까지 들어가고 반환되면서 최종 create()까지 호출이 된다.
 > 
 
 ### 결과
@@ -469,9 +469,8 @@ speed
 time
 message
 ```
-
-<img width="712" alt="스크린샷 2021-10-03 오후 6 22 13" src="https://user-images.githubusercontent.com/42247724/135747719-5154b0bc-e98f-4f66-a89b-2a4b401de262.png">
 형태 → message ( time ( speed ( speed ( weather ( time ( HudDisplay ) ) ) ) ) )
+<img width="712" alt="스크린샷 2021-10-03 오후 6 22 13" src="https://user-images.githubusercontent.com/42247724/135747719-5154b0bc-e98f-4f66-a89b-2a4b401de262.png">
 
 displays.txt
 
@@ -482,6 +481,5 @@ time
 weather
 time
 ```
-
+형태 → time ( weather ( time ( speed ( message ( HudDisplay ) ) ) ) )
 <img width="712" alt="스크린샷 2021-10-03 오후 6 23 27" src="https://user-images.githubusercontent.com/42247724/135747724-2609983d-5212-48a9-8a4e-3ee1d08dd608.png">
-형태 → message ( speed ( time ( weather ( time ( HudDisplay ) ) ) ) )

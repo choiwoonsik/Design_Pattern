@@ -6,7 +6,9 @@
 2. [Strategy Pattern](#2-전략-패턴-_-strategy)
 3. [Observer Pattern](#3-옵저버-패턴-_-observer)
 4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
-5. [...](#5)
+5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
+6. []()
+7. []()
 
 ## 1. 다형성
 - 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.
@@ -60,7 +62,7 @@ new doc.pdf로 변환해서 저장합니다.
 new doc.docx로 변환해서 저장합니다.
 wps파일 형식을 지원하는 DocConverter가 없습니다.
 ```
-
+---
 ## 2. 전략 패턴 _ Strategy
 
 - 같은 종류의 작업을 하는 알고리즘을 정의하고, 각 알고리즘을 캡슐화 하여 알고리즘들을 서로 바꿔 사용할 수 있도록 한다.
@@ -189,6 +191,7 @@ public class Main {
 Process finished with exit code 0
 ```
 
+---
 ## 3. 옵저버 패턴 _ Observer
 
 - 옵저버 패턴은 객체의 상태 변화를 관찰하는 관찰자들, 즉 옵저버들의 목록을 객체에 등록하고 상태의 변화가 있을 때 마다 메서드 등을 통해 객체가 직접 목록의 각 옵저버에게 통지하도록 하는 패턴이다.
@@ -316,6 +319,7 @@ public class MainWindow extends FrameWindow implements ActionListener, Subject{
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/135633274-bca0a406-60be-48bf-85a7-14feb2025d67.gif)
 - start를 누르면 구독 : 소수가 생성되는 통보를 계속 받고 화면에 나타낸다.
 - stop을 누르면 구독취소 : 더이상 화면의 소수를 업데이트하지 않는다.
+---
 
 ## 4. 데코레이터 패턴 _ Decorator
 
@@ -461,7 +465,7 @@ main() → MainWindow() → createWindow() → createPanel()
 
 displays.txt
 
-```java
+```
 time
 weather
 speed
@@ -474,7 +478,7 @@ message
 
 displays.txt
 
-```java
+```
 message
 speed
 time
@@ -483,3 +487,155 @@ time
 ```
 형태 → time ( weather ( time ( speed ( message ( HudDisplay ) ) ) ) )
 <img width="712" alt="스크린샷 2021-10-03 오후 6 23 27" src="https://user-images.githubusercontent.com/42247724/135747724-2609983d-5212-48a9-8a4e-3ee1d08dd608.png">
+---
+
+## 5. 팩토리 메소드 패턴 _ Factory Method
+- 부모(상위) 클래스에 알려지지 않은 구체 클래스를 생성하는 패턴이며, 자식(하위) 클래스가 어떤 객체를 생성할지를 결정하도록 하는 패턴.
+- 객체 생성용 인터페이스를 정의하고 해당 인스턴스를 상속한 서브클래스가 어떤 클래스를 인스턴스화(객체 생성) 할 지 결정할 수 있도록 한다.
+- 팩토리 메소드는 객체 생성을 서브 클래스에서 할 수 있도록 미룰 수 있게 한다.
+
+>
+> #### 왜 굳이 자식 클래스에서 객체를 생성하도록 미루는 것이고 얻을 수 있는 장점이 뭘까?
+실제 객체를 생성하기 위해서 new를 사용한다. new를 호출해서 객체를 생성하게 되는데 생성할 객체가 다양하고 추가/삭제 등 변경이 잦다면 어떻게 될까? 
+
+클라이언트 단의 잦은 코드 수정이 불가피하게 되고 이는 객체지향 설계 원칙인 OCP (변경에는 닫히고 확장에는 열려야 함)를 위반하게 될 것이다.
+따라서, 생성을 구현과 분리해서 캡슐화 시키므로서 수정이 일어나는 곳을 최소화 하고 변경이 확산되는 것을 방지할 수 있다.
+
+> #### 팩토리 메소드 패턴의 구조
+<img width="500" src="https://user-images.githubusercontent.com/42247724/136726116-a3c04b05-94fe-4f87-933b-e17712387f28.png" alt="팩토리 메소드 패턴">
+
+- Product : 팩토리 메소드 패턴으로 생성될 객체들의 공통 인터페이스.
+  - 다이어그램에서 Shape Abstract Class가 담당하는 부분이다.
+- ConcreteProduct : 구체적으로 객체가 생성되는 클래스.
+  - Rectangle, Triangle ... 등 실제 생성되는 객체들이다. Product 인터페이스를 상속받는다. 
+  - 여기서 상속은 확장에 의의가 있는 것이 아니라 상위 클래스로 캡슐화 하는 용도이다.
+- Creator : 팩토리 메소드를 갖는 클래스.
+  - ShpaeFactory Interface가 해당 역활을 한다.
+- ConcreteCreator : 팩토리 메소드를 구현하는 클래스이다. 해당 클래스에서 ConcreteProduct 객체를 생성한다.
+
+### 다이어그램
+<img width="1226" alt="스크린샷 2021-10-10 오후 11 18 08" src="https://user-images.githubusercontent.com/42247724/136699671-b8900067-4414-40ac-b0e4-a2101170fdc6.png">
+
+### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Main.java#L36)
+```java
+import java.awt.*;
+import java.util.ArrayList;
+
+public class Main {
+    public static void main(String[] args) {
+        final Point[] RECTANGLE_POINTS = {
+                new Point(100, 150),
+                new Point(150, 100)
+        };
+        final Point[] TRAPEZOID_POINTS = {
+                new Point(200, 150),
+                new Point(280, 100),
+                new Point(170, 100),
+                new Point(250, 150)
+        };
+        final Point[] PARALLELOGRAM_POINTS = {
+                new Point(330, 150),
+                new Point(400, 100),
+                new Point(300, 100),
+                new Point(430, 150)
+        };
+        final Point[] TRIANGLE_POINTS = {
+                new Point(225, 300),
+                new Point(200, 250),
+                new Point(250, 250)
+        };
+        final Point[] RIGHT_TRIANGLE_POINTS = {
+                new Point(350, 300),
+                new Point(300, 250),
+                new Point(350, 250)
+        };
+
+        ArrayList<Shape> shapeList = new ArrayList<>();
+        ShapeFactory factory;
+
+        factory = new RectangularShapeFactory();
+        shapeList.add(factory.create(Type.Rectangle.type, RECTANGLE_POINTS));
+        shapeList.add(factory.create(Type.Trapezoid.type, TRAPEZOID_POINTS));
+        shapeList.add(factory.create(Type.Parallelogram.type, PARALLELOGRAM_POINTS));
+
+        factory = new TriangularShapeFactory();
+        shapeList.add(factory.create(Type.Triangle.type, TRIANGLE_POINTS));
+        shapeList.add(factory.create(Type.RightTriangle.type, RIGHT_TRIANGLE_POINTS));
+
+        for (Shape s : shapeList) {
+            System.out.println(s);
+        }
+    }
+}
+```
+
+### RectangularShapeFactory.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/RectangularShapeFactory.java#L3)
+```java
+import java.awt.*;
+
+public class RectangularShapeFactory implements ShapeFactory {
+    @Override
+    public Shape create(String type, Point[] points) {
+        if (type.equals(Type.Rectangle.type)) {
+            return new Rectangle(type, points);
+        } else if (type.equals(Type.Parallelogram.type)) {
+            return new Parallelogram(type, points);
+        } else if (type.equals(Type.Trapezoid.type)) {
+            return new Trapezoid(type, points);
+        }
+        return null;
+    }
+}
+```
+- 팩토리 메소드 인터페이스를 상속받아서 팩토리 메소드를 구현한 클래스
+- 여기서 타입에 맞는 객체를 생성하도록 한다. -> Rectangular 관련 타입만 생성함.
+
+### 설명
+다양한 도형 별 크기를 계산하기 위해 도형별 객체가 존재하고 도형별로 별도의 계산법을 사용해야하는 상황이다.
+클라이언트에서 각 타입별로 객체를 선언해서 계산하지 않고 factory 패턴에 이를 맡긴다. 메인에서는 계산을 원하는 도형을 삼각형, 사각형에 따라
+그에 맞는 factory에 보내서 만들도록 한다.
+
+만약 다른 종류의 사각형이나 삼각형이 추가되더라도 클라이언트 코드는 변경없이 바로 추가만 해주면 된다. 그에 맞는 생성 로직은 Factory 패턴에서 담당한다.
+
+각 도형들은 모두 [Shape 추상 클래스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Shape.java#L12) 를 상속하고, 
+공통으로 갖는 기능 및 변수를 선언하고 도형별로 다른 계산 법을 가지는 calcArea()는 추상 메소드로 선언한다. 이부분은 상속한 도형에서 override하여 구현한다.
+
+[도형 객체](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Triangle.java) 를 선언하는 Factory들은 [ShapeFactory 인터페이스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/ShapeFactory.java) 를
+상속받고 객체를 생성하는 create() 메소드를 구현한다.
+
+Factory 내부에서 전달받는 타입에 맞게 객체를 생성하는 책임을 갖는다. (Ex. RectangularShapeFactory)
+
+### 결과
+```
+Rectangle
+P0: java.awt.Point[x=100,y=150]
+P1: java.awt.Point[x=150,y=100]
+area: 2500.0
+
+Trapezoid
+P0: java.awt.Point[x=200,y=150]
+P1: java.awt.Point[x=280,y=100]
+P2: java.awt.Point[x=170,y=100]
+P3: java.awt.Point[x=250,y=150]
+area: 4000.0
+
+Parallelogram
+P0: java.awt.Point[x=330,y=150]
+P1: java.awt.Point[x=400,y=100]
+P2: java.awt.Point[x=300,y=100]
+P3: java.awt.Point[x=430,y=150]
+area: 5000.0
+
+Triangle
+P0: java.awt.Point[x=225,y=300]
+P1: java.awt.Point[x=200,y=250]
+P2: java.awt.Point[x=250,y=250]
+area: 1250.0
+
+RightTriangle
+P0: java.awt.Point[x=350,y=300]
+P1: java.awt.Point[x=300,y=250]
+P2: java.awt.Point[x=350,y=250]
+area: 1250.0
+```
+---

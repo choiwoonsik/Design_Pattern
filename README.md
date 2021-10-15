@@ -639,3 +639,186 @@ P2: java.awt.Point[x=350,y=250]
 area: 1250.0
 ```
 ---
+
+## 6. 싱글톤 패턴 _ Singleton
+- 여러 객체가 생성되면 상태 관리가 어렵다.
+- 이를 해결하기 위해 객체 생성자를 중앙에서 관리하는 방법.
+- 객체가 한개이므로 항상 일관된 상태이다.
+- **멀티 쓰레드에서는 문제가 될 수 있다. (해결방법 존재)**
+
+#### 싱글톤 패턴 구현 방법
+- private 디폴트 생성자를 만든다.
+- 싱글톤 인스턴스를 저장하는 정적 멤버 변수를 생성한다.
+- 싱글톤 인스턴스를 반환하는 정적 팩토리 메소드를 구현한다.
+
+### ChocolateBoiler.java
+
+```java
+public class ChocolateBoiler {
+    private static ChocolateBoiler instance = null;
+    private boolean empty;
+    private boolean boiled;
+
+    private ChocolateBoiler() {
+        empty = true;
+        boiled = false;
+    }
+
+    public static ChocolateBoiler getInstance() {
+        if (instance == null) {
+            instance = new ChocolateBoiler();
+        }
+        return instance;
+    }
+
+    public boolean isEmpty() {
+        return empty;
+    }
+
+    public boolean isBoiled() {
+        return boiled;
+    }
+
+    public void fill() {
+        if (isEmpty()) {
+            empty = false;
+            boiled = false;
+        }
+    }
+
+    public void drain() {
+        if (!isEmpty() && isBoiled()) {
+            empty = true;
+            boiled = false;
+        }
+    }
+
+    public void boil() {
+        if (!isEmpty() && !isBoiled()) {
+            boiled = true;
+        }
+    }
+}
+```
+
+### 멀티 쓰레드 환경에서의 문제점
+- 싱글톤 인스턴스를 만드는 메소드 : getInstance()는 Critical Section으로서 멀티 쓰레드가 해당 구역에 대해 race condition
+  이 발생하게 되면 의도치 않은 결과가 발생될 수 있다.
+
+#### 문제 코드 예시
+```java
+public class Main {
+    public static void main(String[] args) {
+
+        HashSet<String> set = new HashSet<>();
+
+        for (int i = 0; i < 100; i++) {
+            int tmp = i;
+            new Thread(() -> {
+                ChocolateBoiler instance = ChocolateBoiler.getInstance();
+                set.add(instance.toString());
+                System.out.println(tmp + ": " + System.currentTimeMillis() +" , "+ set.size());
+            }).start();
+        }
+    }
+}
+```
+<img width="637" alt="스크린샷 2021-10-15 오전 11 47 51" src="https://user-images.githubusercontent.com/42247724/137424490-4e49ac51-e09f-449d-8f47-8b8c0177e3ab.png">
+
+- 실제로 객체가 여러개 생성되어 Set에 저장된 것을 확인할 수 있다.
+
+#### 해결방법 (1) - 동기화
+- 쓰레드들이 해당 구역을 동시에 접근할 수 없도록, lock을 사용한다. -> Synchronize
+- 문제점
+    - 단, 이렇게 하면 해당 구역에 대해서는 순차적으로 수행되므로 비효율적일 수 있다.
+    - 해당 Critical Section에 무거운 로직이 있다면 더욱 좋지 않다.
+```java
+// getInstance() 메소드 동기화
+public synchronized static ChocolateBoiler getInstance() {
+    if (instance == null) {
+        instance = new ChocolateBoiler();
+    }
+    return instance;
+}
+```
+<img width="637" alt="스크린샷 2021-10-15 오전 11 58 08" src="https://user-images.githubusercontent.com/42247724/137425339-c8dbfce3-7343-429c-a027-91b7320c902b.png">
+
+- 객체의 개수가 하나만 생성된 것을 확인할 수 있다.
+
+#### 해결방법 (2) - 미리 생성
+- Synchronized를 사용하지 않고 싱글톤 인스턴스를 프로그램이 생성될 때 같이 생성되도록 한다.
+- 미리 싱글톤 객체를 생성해 버리므로 null 체크 부분이 사라지게 되고 동기화의 필요성도 없어진다.
+- 문제점
+    - 단, 사용하지 않을 수도 있는 인스턴스를 프로그램 시작시 생성하므로 메모리 낭비가 일어날 수 있다.
+    - 객체를 생성하는데 시간을 소요하므로 프로그램의 시작이 느려질 수 있다.
+```java
+private static ChocolateBoiler instance = new ChocolateBoiler();
+
+public static ChocolateBoiler getInstance() {
+    return instance;
+}
+```
+<img width="637" alt="스크린샷 2021-10-15 오후 12 01 11" src="https://user-images.githubusercontent.com/42247724/137425593-bbd8902c-1084-4173-bb79-4e4abf036660.png">
+
+- 객체가 하나만 생성되는 것을 확인할 수 있다.
+
+#### 해결방법 (3) - DCL & volatile
+- Double Checking Locking을 사용해서 동기화 되는 부분을 줄임으로서 동기화를 개선한 방법이다.
+- 인스턴스가 생성되어 있는지 아닌지를 확인해서 생성되있지 않은 경우에만 동기화를 한다.
+- 생성 여부를 확인하고 되어있지 않을 때만 Lock을 걸게되므로 속도를 개선할 수 있다.
+```java
+private static volatile ChocolateBoiler instance = null;
+
+public static ChocolateBoiler getInstance() {
+    if (instance == null) {
+        synchronized (ChocolateBoiler.class) {
+            if (instance == null)
+                instance = new ChocolateBoiler();
+        }
+    }
+    return instance;
+}
+```
+<img width="637" alt="스크린샷 2021-10-15 오후 12 03 38" src="https://user-images.githubusercontent.com/42247724/137425749-4628c12d-7a89-4283-85f2-b782b331fe5e.png">
+
+- 객체가 하나만 생성되는 것을 확인할 수 있다.
+
+> ### Volatile이란?
+> 
+> 멀티 프로세스 환경에서 멀티 쓰레드가 구동되면 각각의 프로세스에 쓰레드가 수행될 수 있다.
+> 이때 각 프로세스에는 속도가 상대적으로 느린 메모리를 보충하기 위해 캐시메모리가 존재한다.
+> 
+> 하지만 캐시메모리는 프로세스 간 값이 다를 수 있다는 단점이 존재한다. 
+> 또한 메모리에 저장된 값이랑 다를 가능성 또한 존재한다.
+> 
+> 이를 보완하기 위해 **CPU 캐시메모리에 저장하지 않고 메모리에서 값을 읽고 저장해 사용하도록 명시하는 것**이 "volatile"이다.
+
+### 결과
+- 싱글톤 패턴을 이용하여 무분별한 객체 생성을 방지할 수 있다. 하지만 멀티 프로세스 & 멀티 쓰레드 환경에서
+동기화 문제가 발생할 수 있어서 이에 대한 해결방법이 필요했다.
+- 해결방법으로는 1. synchronized, 2. 선언과 동시에 생성, 3. DCL & volatile 이 있었다.
+각 해결방법에는 장단점이 존재하므로 적절하게 상황에 맞게 사용하면 되겠다.
+
+---
+
+## 7. ? 패턴 _ ?
+
+### 다이어그램
+
+### Main.java
+
+### 설명
+
+### 결과
+
+---
+
+## 8. ? 패턴 _ ?
+
+### 다이어그램
+
+### Main.java
+
+### 설명
+
+### 결과

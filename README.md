@@ -9,6 +9,7 @@
 5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
 6. [Singleton Pattern](#6-싱글톤-패턴-_-Singleton)
 7. []()
+8. []()
 
 ## 1. 다형성
 - 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.
@@ -487,6 +488,7 @@ time
 ```
 형태 → time ( weather ( time ( speed ( message ( HudDisplay ) ) ) ) )
 <img width="712" alt="스크린샷 2021-10-03 오후 6 23 27" src="https://user-images.githubusercontent.com/42247724/135747724-2609983d-5212-48a9-8a4e-3ee1d08dd608.png">
+
 ---
 
 ## 5. 팩토리 메소드 패턴 _ Factory Method
@@ -638,6 +640,7 @@ P1: java.awt.Point[x=300,y=250]
 P2: java.awt.Point[x=350,y=250]
 area: 1250.0
 ```
+
 ---
 
 ## 6. 싱글톤 패턴 _ Singleton
@@ -651,7 +654,7 @@ area: 1250.0
 - 싱글톤 인스턴스를 저장하는 정적 멤버 변수를 생성한다.
 - 싱글톤 인스턴스를 반환하는 정적 팩토리 메소드를 구현한다.
 
-### ChocolateBoiler.java
+### ChocolateBoiler.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap06_Singleton/src/ChocolateBoiler.java#L11)
 
 ```java
 public class ChocolateBoiler {

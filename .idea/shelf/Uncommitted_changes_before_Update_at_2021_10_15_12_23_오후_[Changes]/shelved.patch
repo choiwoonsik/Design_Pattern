@@ -1,0 +1,337 @@
+Index: README.md
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># 디자인 패턴 학습 정리\n\n### 목차\n\n1. [다형성](#1-다형성)\n2. [Strategy Pattern](#2-전략-패턴-_-strategy)\n3. [Observer Pattern](#3-옵저버-패턴-_-observer)\n4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)\n5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)\n6. []()\n7. []()\n\n## 1. 다형성\n- 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.\n- 부모 클래스 타입의 참조변수로 여러 자식 클래스 타입의 인스턴스를 참조할 수 있다.\n- 인스턴스를 이용한 상속관계 및 오버라이딩을 사용하여 구현한다.\n\n#### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap01_polymorphism/src/Main.java)\n```java\nimport Converter.DocxDocConverter;\nimport Converter.OdtDocConverter;\nimport Converter.PdfDocConverter;\n\npublic class Main {\n    public static void main(String[] args) {\n        WordProcessor wp = new WordProcessor(\"new doc\");\n        wp.setSpellChecker(new EngSpellChecker());\n        \n        wp.addDocConverter(new DocxDocConverter());\n        wp.addDocConverter(new PdfDocConverter());\n        wp.addDocConverter(new OdtDocConverter());\n        \n        wp.checkSpelling();\n        \n        wp.convertDocTo(\"odt\");\n        wp.convertDocTo(\"pdf\");\n        wp.convertDocTo(\"docx\");\n        wp.convertDocTo(\"wps\");\n    }\n}\n```\n#### 설명\n\n- WordProcessor클래스는 문서 변환기, 맞춤법 검사기를 등록할 수 있다. 이를 사용하여 맞춤범을 검사하고 문서를 변한한다.\n [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap01_polymorphism/src/WordProcessor.java)\n- EngSpellChecker클래스는 구현 클래스로 ISpellChecker 인터페이스를 상속받아서 구현한 클래스이다. 영어 맞춤법을 검사한다. \n[코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap01_polymorphism/src/ISpellChecker.java)\n- DocxDocConverter, PdfDocConverter, OdtDocConverter클래스는 DocConveter Abstract 클래스를 상속받아서 구현한 구현한 클래스이다. \n[코드](https://github.com/choiwoonsik/Design_Pattern/tree/main/chap01_polymorphism/src/Converter)\n\n#### 로직\n>main클래스에서 문서 처리기를 만들고, 해당 문서 처리기에 EngSpellChecker를 추가한다.\nEngSpellChecker는 IspellChecker 인터페이스를 구현한 클래스로 영어 스펠링 체크를 담당하여 구현한 클래스이다.\naddDocConverter()를 통해 문서 별 DocConverter를 생성하여 추가해 준다.\n이때 각 문서 Converter들은 추상클래스 DocConverter를 상속받아서 구현한다.\n\n#### 결과\n```\nChecking English Spelling...\nnew doc.odt로 변환해서 저장합니다.\nnew doc.pdf로 변환해서 저장합니다.\nnew doc.docx로 변환해서 저장합니다.\nwps파일 형식을 지원하는 DocConverter가 없습니다.\n```\n---\n## 2. 전략 패턴 _ Strategy\n\n- 같은 종류의 작업을 하는 알고리즘을 정의하고, 각 알고리즘을 캡슐화 하여 알고리즘들을 서로 바꿔 사용할 수 있도록 한다.\n- strategy 패턴은 알고리즘을 사용하는 클라이언트로 부터 독립적으로 알고리즘을 바꿔서 적용할 수 있게 한다.\n\n### 클래스 다이어그램\n<img width=\"898\" alt=\"스크린샷 2021-10-01 오후 8 02 46\" src=\"https://user-images.githubusercontent.com/42247724/135609885-8247fcfa-e59a-44fd-9a67-531c34e14755.png\">\n\n### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/Main.java)\n\n```java\nimport java.text.ParseException;\nimport java.text.ParsePosition;\nimport java.util.Arrays;\nimport java.util.Date;\nimport java.text.SimpleDateFormat;\n\npublic class Main {\n    String[] names = { \"CompareModifiedDate\", \"CompareFileType\", \"CompareFileName\", \"Main\", \"CompareSize\"  };\n    String[] types = { \"java\", \"java\", \"class\", \"java\", \"Class\" };\n    String[] dateStrings = { \"2020-09-13T21:59:00\", \"2020-09-12T21:59:00\", \"2020-09-13T16:54:00\", \"2020-09-12T21:54:00\", \"2020-09-13T11:59:00\" };\n    int[] sizes = { 120, 80, 150, 85, 100 };\n\n    public FileInfo[] createFileInfoArrays() {\n        FileInfo[] fileLists = new FileInfo[names.length];\n        SimpleDateFormat dateTimeInstance = new SimpleDateFormat(\"yyyy-MM-dd'T'HH:mm:ss\");\n\n        for (int i = 0; i < fileLists.length; i++) {\n            Date date = dateTimeInstance.parse(dateStrings[i], new ParsePosition(0));\n            fileLists[i] = new FileInfo(names[i], types[i], sizes[i], date);\n        }\n        return fileLists;\n    }\n\n    public void printFileLists(FileInfo[] fileLists) {\n        for (FileInfo fi : fileLists) {\n            System.out.printf(\"이름 : %s, 타입 : %s, 크기 : %d, 수정날짜 : %s\\n\", fi.name, fi.type, fi.size, fi.modifiedDate);\n        }\n    }\n\n    public static void main(String[] args) {\n        Main m = new Main();\n        FileInfo[] fileLists = m.createFileInfoArrays();\n        System.out.println(\"원본 리스트\");\n        m.printFileLists(fileLists);\n\n        System.out.println(\"\\n\\n파일 이름으로 정렬된 리스트\");\n        Sorter sorter = new Sorter(new CompareFileName());\n        sorter.bubbleSort(fileLists);\n        m.printFileLists(fileLists);\n\n        System.out.println(\"\\n\\n파일 종류로 정렬된 리스트\");\n        sorter.setComparable(new CompareFileType());\n        sorter.bubbleSort(fileLists);\n        m.printFileLists(fileLists);\n\n        System.out.println(\"\\n\\n파일 크기로 정렬된 리스트\");\n        sorter.setComparable(new CompareSize());\n        sorter.bubbleSort(fileLists);\n        m.printFileLists(fileLists);\n\n        System.out.println(\"\\n\\n파일 수정 시간으로 정렬된 리스트\");\n        sorter.setComparable(new CompareModifiedDate());\n        sorter.bubbleSort(fileLists);\n        m.printFileLists(fileLists);\n    }\n}\n```\n\n### 설명\n\n현재 Main 클래스에서 파일 목록을 생성하고 있다. 이 파일 목록을 정렬하려고 하는데 동일한 정렬 \n알고리즘으로 여러 기준에 대해 정렬을 하려고 한다.\n\n기준으로는 파일이름, 파일 종류, 파일 크기, 파일 수정 시간 4가지가 존재한다. 이 기준별로 정렬 알고리즘을\n각각 짜는것은 매우 비효율적이므로 하나의 정렬 알고리즘을 구현하고, 전달받은 기준으로 정렬하도록 한다.\n\n- Sorter 클래스는 Object 타입에 대해 bubbleSort()를 하는 메소드를 갖고 있으며 setComparable()을 통해 원하는 Comparable을 받을 수 있게 되어있다. [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/Sorter.java)\n- [CompareFileName](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/CompareFileName.java), [CompareFileType](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/CompareFileType.java), [CompareSize](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/CompareSize.java), [CompareModifiedDate](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/CompareModifiedDate.java) 클래스들은\n전부 [Comparable 인터페이스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap02_StrategyPattern/src/Comparable.java)를 상속받아서 구현한 클래스이다.\n즉, 각자의 조건에 맞게 Comparable을 구현하여 알고리즘을 캡슐화 할 수 있게 한다.\n\n### 로직\n\n> 원하는 조건으로 setComparable()을 하고 Object 타입으로 받은 객체를 bubbleSort()하므로서 알고리즘을 캡슐화하고 원하는 기준만 적절히 바꿔서 정렬한다.\n> \n\n### 결과\n\n```\n원본 리스트\n이름 : CompareModifiedDate, 타입 : java, 크기 : 120, 수정날짜 : Sun Sep 13 21:59:00 KST 2020\n이름 : CompareFileType, 타입 : java, 크기 : 80, 수정날짜 : Sat Sep 12 21:59:00 KST 2020\n이름 : CompareFileName, 타입 : class, 크기 : 150, 수정날짜 : Sun Sep 13 16:54:00 KST 2020\n이름 : Main, 타입 : java, 크기 : 85, 수정날짜 : Sat Sep 12 21:54:00 KST 2020\n이름 : CompareSize, 타입 : Class, 크기 : 100, 수정날짜 : Sun Sep 13 11:59:00 KST 2020\n\n파일 이름으로 정렬된 리스트\n이름 : CompareFileName, 타입 : class, 크기 : 150, 수정날짜 : Sun Sep 13 16:54:00 KST 2020\n이름 : CompareFileType, 타입 : java, 크기 : 80, 수정날짜 : Sat Sep 12 21:59:00 KST 2020\n이름 : CompareModifiedDate, 타입 : java, 크기 : 120, 수정날짜 : Sun Sep 13 21:59:00 KST 2020\n이름 : CompareSize, 타입 : Class, 크기 : 100, 수정날짜 : Sun Sep 13 11:59:00 KST 2020\n이름 : Main, 타입 : java, 크기 : 85, 수정날짜 : Sat Sep 12 21:54:00 KST 2020\n\n파일 종류로 정렬된 리스트\n이름 : CompareSize, 타입 : Class, 크기 : 100, 수정날짜 : Sun Sep 13 11:59:00 KST 2020\n이름 : CompareFileName, 타입 : class, 크기 : 150, 수정날짜 : Sun Sep 13 16:54:00 KST 2020\n이름 : CompareModifiedDate, 타입 : java, 크기 : 120, 수정날짜 : Sun Sep 13 21:59:00 KST 2020\n이름 : CompareFileType, 타입 : java, 크기 : 80, 수정날짜 : Sat Sep 12 21:59:00 KST 2020\n이름 : Main, 타입 : java, 크기 : 85, 수정날짜 : Sat Sep 12 21:54:00 KST 2020\n\n파일 크기로 정렬된 리스트\n이름 : CompareFileType, 타입 : java, 크기 : 80, 수정날짜 : Sat Sep 12 21:59:00 KST 2020\n이름 : Main, 타입 : java, 크기 : 85, 수정날짜 : Sat Sep 12 21:54:00 KST 2020\n이름 : CompareSize, 타입 : Class, 크기 : 100, 수정날짜 : Sun Sep 13 11:59:00 KST 2020\n이름 : CompareModifiedDate, 타입 : java, 크기 : 120, 수정날짜 : Sun Sep 13 21:59:00 KST 2020\n이름 : CompareFileName, 타입 : class, 크기 : 150, 수정날짜 : Sun Sep 13 16:54:00 KST 2020\n\n파일 수정 시간으로 정렬된 리스트\n이름 : Main, 타입 : java, 크기 : 85, 수정날짜 : Sat Sep 12 21:54:00 KST 2020\n이름 : CompareFileType, 타입 : java, 크기 : 80, 수정날짜 : Sat Sep 12 21:59:00 KST 2020\n이름 : CompareSize, 타입 : Class, 크기 : 100, 수정날짜 : Sun Sep 13 11:59:00 KST 2020\n이름 : CompareFileName, 타입 : class, 크기 : 150, 수정날짜 : Sun Sep 13 16:54:00 KST 2020\n이름 : CompareModifiedDate, 타입 : java, 크기 : 120, 수정날짜 : Sun Sep 13 21:59:00 KST 2020\n\nProcess finished with exit code 0\n```\n\n---\n## 3. 옵저버 패턴 _ Observer\n\n- 옵저버 패턴은 객체의 상태 변화를 관찰하는 관찰자들, 즉 옵저버들의 목록을 객체에 등록하고 상태의 변화가 있을 때 마다 메서드 등을 통해 객체가 직접 목록의 각 옵저버에게 통지하도록 하는 패턴이다.\n- 정리하면 변화가 발생될 것이 예상되는 객체에 옵저버를 보내놓고 변화가 일어나면 옵저버들을 통해 알림을 보내는 것이다.\n\n### 다이어그램\n<img width=\"1153\" alt=\"스크린샷 2021-10-01 오후 8 03 12\" src=\"https://user-images.githubusercontent.com/42247724/135609893-53e05591-091c-4595-83e7-4d03ef1a7d1d.png\">\n\n### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/MainWindow.java#L31)\n\n```java\nimport javax.swing.*;\nimport java.awt.*;\nimport java.awt.event.*;\nimport java.util.ArrayList;\n\npublic class MainWindow extends FrameWindow implements ActionListener, Subject{\n    // 생략\n    private static final ArrayList<Observer> observers = new ArrayList<>();\n    private PrimeObservableThread primeThread;\n    private TextFieldWindow textFieldWindow;\n    private LabelWindow labelWindow;\n\n    public MainWindow() {}\n\n    public MainWindow(String title) {\n        super(title, X, Y, WIDTH, HEIGHT);\n        textFieldWindow = new TextFieldWindow(TEXT_FIELD_WINDOW_TITLE, X, Y + HEIGHT + GAP, WIDTH, HEIGHT);\n        labelWindow = new LabelWindow(LABEL_WINDOW_TITLE, X, Y + (HEIGHT + GAP) * 2, WIDTH, HEIGHT);\n\n        addWindowListener(new WindowAdapter() {\n            @Override\n            public void windowClosing(WindowEvent e) {\n                primeThread.stopRunning();\n                textFieldWindow.closeWindow();\n                labelWindow.closeWindow();\n                System.exit(0);\n            }\n        });\n\n        // 옵저버들을 붙인 클래스들을 구독한다.\n        subscribe(textFieldWindow);\n        subscribe(labelWindow);\n        primeThread = new PrimeObservableThread();\n        primeThread.run();\n    }\n\n    public JPanel createPanel(int width, int height) {\n        /*\n            판넬 생성 코드\n        */\n    }\n\n    @Override\n    public void actionPerformed(ActionEvent e) {\n        if (e.getSource() == updateTextFieldObserverButton) {\n            \t// start 버튼 누르면 해당 window 옵저버 구독\n            if (updateTextFieldObserverButton.getText().equals(START_TEXT_FIELD)) {\n                subscribe(textFieldWindow);\n                updateTextFieldObserverButton.setText(STOP_TEXT_FIELD);\n            } else {\n\t\t// stop 구독 취소\n                unSubscribe(textFieldWindow);\n                updateTextFieldObserverButton.setText(START_TEXT_FIELD);\n            }\n        }\n        else if (e.getSource() == updateLabelObserverButton) {\n            \t// start 버튼 누르면 해당 window 옵저버 구독\t\n            if (updateLabelObserverButton.getText().equals(START_LABEL_FIELD)) {\n                subscribe(labelWindow);\n                updateLabelObserverButton.setText(STOP_LABEL_FIELD);\n            } else {\n\t\t// stop 구독 취소\n                unSubscribe(labelWindow);\n                updateLabelObserverButton.setText(START_LABEL_FIELD);\n            }\n        } else if (e.getSource() == stopButton) {\n            primeThread.stopRunning();\n        }\n    }\n\n    private JButton createButton(String text, ActionListener listener, int width, int height) {\n        /*\n            버튼 생성 로직\n\t*/\n    }\n\n    public static void main(String[] args) {\n        new MainWindow(MainWindow.MAIN_TITLE);\n    }\n\n    @Override\n    public void subscribe(Observer observer) {\n        observers.add(observer);\n    }\n\n    @Override\n    public void unSubscribe(Observer observer) {\n        observers.remove(observer);\n    }\n\n    @Override\n    public void notifyWindow(String msg) {\n        observers.forEach(observer -> observer.update(msg));\n    }\n}\n```\n\n### 설명\n\n- MainWindow 클래스에서 창을 생성한다. 이때 구독/취소를 위한 버튼창 & TextFieldWindow & LableWindow 세개의 창이 생긴다. 또한 Subject 인터페이스를 상속받아서 옵저버을 등록하고 취소하고 통보하는 [구현](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/MainWindow.java#L108)을 한다.\n- [Lable](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/LabelWindow.java)과 [TextField](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/TextFieldWindow.java)클래스는 [Observer 인터페이스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/Observer.java)를 상속받아서 옵저버가 붙게 된다.\n- 소수 생성기인 [PrimeObserableThread클래스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap03_ObserverPattern/src/PrimeObservableThread.java#L27)에서 소수를 생성하고 옵저버에게 통보를 한다.\n\n### 로직\n\n- Observer를 상태 변화를 감시할 LableWindow와 TextFieldWindow에 붙여놓는다.\n- 해당 옵저버를 구독한다.\n- 소수를 계속 생성하고 이를 생성할 때 마다 notifyWindow()를 통해 TextFieldWindow와 LableWindow에 통보한다.\n- 통보를 받은 두 윈도우는 update()를 수행한다.\n- stop 버튼을 누르면 옵저버를 제거해서 더이상 변화를 통보받지 않는다. 다시 start 버튼을 누르면 다시 변화를 통보받게 된다.\n- 이후 변화가 감지되면 notifyWindow()를 통해 변화를 옵저버들에게 통보한다.\n\n### 결과\n![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/135633274-bca0a406-60be-48bf-85a7-14feb2025d67.gif)\n- start를 누르면 구독 : 소수가 생성되는 통보를 계속 받고 화면에 나타낸다.\n- stop을 누르면 구독취소 : 더이상 화면의 소수를 업데이트하지 않는다.\n---\n\n## 4. 데코레이터 패턴 _ Decorator\n\n- 객체에 추가적인 요건을 동적으로 추가해주는 패턴으로, 서브 클래스를 만들지 않고\n기능을 유연하게 확장할 수 있게 한다.\n- 데코레이터 패턴에서의 상속은 공통적인 타입으로 추상화하기 위한 용도가 주 목적이다.\n- 데코레이터는 인터페이스/추상 클래스로서 역활을 하고 이를 상속받은 클래스들은 \n컴포넌트를 꾸미기 위한 구현을 갖게 된다.\n- 컴포넌트는 바로 사용되거나 데코레이터레가 붙어서 사용될 수 있다.\n\n#### 예시\n- 데코레이터 패턴을 일상생활의 예시로 커피를 들 수 있다. \n- 커피를 생각해보면 에스프레소, 콜드블루는 컴포넌트가 될 수 있고\n얼음, 시나몬 가루, 우유, 두유, 샷, 자바칩 등은 모두 데코레이터 클래스를 상속받은\n데코를 위한 클래스가 될 수 있다.\n- 이때, 최상위 추상 클래스/인터페이스를 Beverage로 두고 에스프레소, 콜드블루 컴포넌트는 Beverage를 상속받는다.\n- 데코들의 추상화를 위해 Beverage를 상속받은 BeverageDecorator를 선언하고, \n모든 데코 용 클래스들은 BeverageDecorator를 상속받는다.\n- 형태 → 자바칩 ( 우유 ( 얼음 ( 얼음 ( 샷 ( 에스프레소 ) ) ) ) ), 이때 순서는 상관이 없다.\n\n### 다이어그램\n\n<img width=\"746\" alt=\"스크린샷 2021-10-03 오후 5 42 36\" src=\"https://user-images.githubusercontent.com/42247724/135746322-2f966aae-9257-42aa-a3f5-6365ca2c6ac4.png\">\n\n- Display 추상 클래스를 최상위 클래스로 두고 기본 컴포넌트로 HudDisplay를 갖는다.\n- HudDisplay를 꾸밀 수 있는 Deco용 클래스들의 추상화 용도로 Display를 상속한 추상 클래스 DisplayDecorator를 둔다.\n- Message, Time, Weater, Speed 클래스들은 DisplayDecorator를 상속받아서 구현한다.\n- 결국 데코 클래스도 Display 클래스의 하위 클래스로서 데코클래스에서 반환한 클래스에 대해\n 데코를 반복할 수 있게 된다.\n\n### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MainWindow.java#L22)\n\n```java\npublic class MainWindow extends FrameWindow {\n    private static final String MAIN_TITLE = \"woonsik's Window\";\n    private static final int X = 250;\n    private static final int Y = 100;\n    private static final int WIDTH = 600;\n    private static final int HEIGHT = 100;\n\n    private ArrayList<String> displayList;\n    private JFrame frame;\n\n    public MainWindow(String title, ArrayList<String> list) {\n        displayList = list;\n        frame = createWindow(title, X, Y, WIDTH, HEIGHT * (displayList.size() + 1));\n        frame.addWindowListener(new WindowAdapter() {\n            @Override\n            public void windowClosing(WindowEvent e) {\n                closeWindow();\n                System.exit(0);\n            }\n        });\n    }\n\n    public JFrame createWindow(String title, int x, int y, int width, int totalHeight) {\n        JFrame frame;\n        frame = new JFrame(title);\n        frame.setBounds(x, y, width, totalHeight);\n\n        JPanel panel = createPanel(width, totalHeight);\n        frame.getContentPane().add(panel);\n        frame.pack();\n        frame.setVisible(true);\n        return frame;\n    }\n\n    public void closeWindow() {\n        frame.setVisible(false);\n        frame.dispose();\n    }\n\n    public JPanel createPanel(int width, int totalHeight) {\n        // 제일 바탕에 놓일 패널 생성\n        JPanel panel = new JPanel();\n        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));\n        panel.setMinimumSize(new Dimension(width, totalHeight));\n        panel.setPreferredSize(new Dimension(width, totalHeight));\n\n        Display display = new HudDisplay(WIDTH, HEIGHT);\n\n        // 새로운 장식이 추가될 때마다 새로운 패널이 생성되고, 그 안에 기존 패널이 추가된다.\n        for (String name : displayList) {\n            if (name.equals(\"speed\")) {\n                display = new SpeedometerDisplay(display, WIDTH, HEIGHT);\n            }\n            else if (name.equals(\"time\")) {\n                display = new TimeDisplay(display, WIDTH, HEIGHT);\n            }\n            else if (name.equals(\"weather\")) {\n                display = new WeatherDisplay(display, WIDTH, HEIGHT);\n            }\n            else if (name.equals(\"message\")) {\n                display = new MessageDisplay(display, WIDTH, HEIGHT);\n            }\n        }\n        // 장식이 모두 끝나면 최종 디스플레이 패널을 생성함.\n        panel.add(display.create());\n\n        // 높이를 출력\n        System.out.println(\"disply.totalHeight = \" + display.getHeight());\n\n        // 디스플레이마다 각각의 내용을 화면에 보임\n        display.show();\n        return panel;\n    }\n\n    public static void main(String[] args) {\n        final String displayFileName = \"displays.txt\";\n        ArrayList<String> list;\n\n        LoadHudDisplays loadDisplay = new LoadHudDisplays(displayFileName);\n        list = loadDisplay.load();\n\n        System.out.printf(\"display.size() = %d\\n\", list.size());\n        for (String s : list) {\n            System.out.println(s);\n        }\n\n        new MainWindow(MainWindow.MAIN_TITLE, list);\n    }\n}\n```\n\n### 설명\n\nmain() → MainWindow() → createWindow() → createPanel()\n\n- createPanel 에서 기본 컴포넌트로서 HudDisplay를 만든다. _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MainWindow.java#L58)\n- 이후 display.txt파일에 작성된 순서대로 디스플레이에 기능 목록을 추가한다.\n- 데코 용 클래스 :  [MessageDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/MessageDisplay.java), [SpeedmeterDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/SpeedmeterDisplay.java), [TimeDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/TimeDisplay.java), [WeatherDisplay](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap04_DecoratorPattern/src/WeatherDisplay.java)\n\n### 로직\n\n> Display 클래스를 상속한 DisplayDecorator 클래스는 데코 들의 추상 클래스. 이 추상 클래스를 여러 데코 용 클래스들이 상속받아서 데코를 하게 된다. \n>\n>display.txt파일을 읽고 해당 순서대로 Deco클래스들을 감싸게 되고 마지막에 감싼 구현 클래스의 display.create()를 호출하게 된다.\n>\n>해당 구현 클래스의 create 메소드를 들어가면 전달 받은 클래스의 create()를 전달받아서 처리한다. 따라서 최초의 컴포넌트 create()까지 들어가고 반환되면서 최종 create()까지 호출이 된다.\n> \n\n### 결과\n\ndisplays.txt\n\n```\ntime\nweather\nspeed\nspeed\ntime\nmessage\n```\n형태 → message ( time ( speed ( speed ( weather ( time ( HudDisplay ) ) ) ) ) )\n<img width=\"712\" alt=\"스크린샷 2021-10-03 오후 6 22 13\" src=\"https://user-images.githubusercontent.com/42247724/135747719-5154b0bc-e98f-4f66-a89b-2a4b401de262.png\">\n\ndisplays.txt\n\n```\nmessage\nspeed\ntime\nweather\ntime\n```\n형태 → time ( weather ( time ( speed ( message ( HudDisplay ) ) ) ) )\n<img width=\"712\" alt=\"스크린샷 2021-10-03 오후 6 23 27\" src=\"https://user-images.githubusercontent.com/42247724/135747724-2609983d-5212-48a9-8a4e-3ee1d08dd608.png\">\n---\n\n## 5. 팩토리 메소드 패턴 _ Factory Method\n- 부모(상위) 클래스에 알려지지 않은 구체 클래스를 생성하는 패턴이며, 자식(하위) 클래스가 어떤 객체를 생성할지를 결정하도록 하는 패턴.\n- 객체 생성용 인터페이스를 정의하고 해당 인스턴스를 상속한 서브클래스가 어떤 클래스를 인스턴스화(객체 생성) 할 지 결정할 수 있도록 한다.\n- 팩토리 메소드는 객체 생성을 서브 클래스에서 할 수 있도록 미룰 수 있게 한다.\n\n>\n> #### 왜 굳이 자식 클래스에서 객체를 생성하도록 미루는 것이고 얻을 수 있는 장점이 뭘까?\n실제 객체를 생성하기 위해서 new를 사용한다. new를 호출해서 객체를 생성하게 되는데 생성할 객체가 다양하고 추가/삭제 등 변경이 잦다면 어떻게 될까? \n\n클라이언트 단의 잦은 코드 수정이 불가피하게 되고 이는 객체지향 설계 원칙인 OCP (변경에는 닫히고 확장에는 열려야 함)를 위반하게 될 것이다.\n따라서, 생성을 구현과 분리해서 캡슐화 시키므로서 수정이 일어나는 곳을 최소화 하고 변경이 확산되는 것을 방지할 수 있다.\n\n> #### 팩토리 메소드 패턴의 구조\n<img width=\"500\" src=\"https://user-images.githubusercontent.com/42247724/136726116-a3c04b05-94fe-4f87-933b-e17712387f28.png\" alt=\"팩토리 메소드 패턴\">\n\n- Product : 팩토리 메소드 패턴으로 생성될 객체들의 공통 인터페이스.\n  - 다이어그램에서 Shape Abstract Class가 담당하는 부분이다.\n- ConcreteProduct : 구체적으로 객체가 생성되는 클래스.\n  - Rectangle, Triangle ... 등 실제 생성되는 객체들이다. Product 인터페이스를 상속받는다. \n  - 여기서 상속은 확장에 의의가 있는 것이 아니라 상위 클래스로 캡슐화 하는 용도이다.\n- Creator : 팩토리 메소드를 갖는 클래스.\n  - ShpaeFactory Interface가 해당 역활을 한다.\n- ConcreteCreator : 팩토리 메소드를 구현하는 클래스이다. 해당 클래스에서 ConcreteProduct 객체를 생성한다.\n\n### 다이어그램\n<img width=\"1226\" alt=\"스크린샷 2021-10-10 오후 11 18 08\" src=\"https://user-images.githubusercontent.com/42247724/136699671-b8900067-4414-40ac-b0e4-a2101170fdc6.png\">\n\n### Main.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Main.java#L36)\n```java\nimport java.awt.*;\nimport java.util.ArrayList;\n\npublic class Main {\n    public static void main(String[] args) {\n        final Point[] RECTANGLE_POINTS = {\n                new Point(100, 150),\n                new Point(150, 100)\n        };\n        final Point[] TRAPEZOID_POINTS = {\n                new Point(200, 150),\n                new Point(280, 100),\n                new Point(170, 100),\n                new Point(250, 150)\n        };\n        final Point[] PARALLELOGRAM_POINTS = {\n                new Point(330, 150),\n                new Point(400, 100),\n                new Point(300, 100),\n                new Point(430, 150)\n        };\n        final Point[] TRIANGLE_POINTS = {\n                new Point(225, 300),\n                new Point(200, 250),\n                new Point(250, 250)\n        };\n        final Point[] RIGHT_TRIANGLE_POINTS = {\n                new Point(350, 300),\n                new Point(300, 250),\n                new Point(350, 250)\n        };\n\n        ArrayList<Shape> shapeList = new ArrayList<>();\n        ShapeFactory factory;\n\n        factory = new RectangularShapeFactory();\n        shapeList.add(factory.create(Type.Rectangle.type, RECTANGLE_POINTS));\n        shapeList.add(factory.create(Type.Trapezoid.type, TRAPEZOID_POINTS));\n        shapeList.add(factory.create(Type.Parallelogram.type, PARALLELOGRAM_POINTS));\n\n        factory = new TriangularShapeFactory();\n        shapeList.add(factory.create(Type.Triangle.type, TRIANGLE_POINTS));\n        shapeList.add(factory.create(Type.RightTriangle.type, RIGHT_TRIANGLE_POINTS));\n\n        for (Shape s : shapeList) {\n            System.out.println(s);\n        }\n    }\n}\n```\n\n### RectangularShapeFactory.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/RectangularShapeFactory.java#L3)\n```java\nimport java.awt.*;\n\npublic class RectangularShapeFactory implements ShapeFactory {\n    @Override\n    public Shape create(String type, Point[] points) {\n        if (type.equals(Type.Rectangle.type)) {\n            return new Rectangle(type, points);\n        } else if (type.equals(Type.Parallelogram.type)) {\n            return new Parallelogram(type, points);\n        } else if (type.equals(Type.Trapezoid.type)) {\n            return new Trapezoid(type, points);\n        }\n        return null;\n    }\n}\n```\n- 팩토리 메소드 인터페이스를 상속받아서 팩토리 메소드를 구현한 클래스\n- 여기서 타입에 맞는 객체를 생성하도록 한다. -> Rectangular 관련 타입만 생성함.\n\n### 설명\n다양한 도형 별 크기를 계산하기 위해 도형별 객체가 존재하고 도형별로 별도의 계산법을 사용해야하는 상황이다.\n클라이언트에서 각 타입별로 객체를 선언해서 계산하지 않고 factory 패턴에 이를 맡긴다. 메인에서는 계산을 원하는 도형을 삼각형, 사각형에 따라\n그에 맞는 factory에 보내서 만들도록 한다.\n\n만약 다른 종류의 사각형이나 삼각형이 추가되더라도 클라이언트 코드는 변경없이 바로 추가만 해주면 된다. 그에 맞는 생성 로직은 Factory 패턴에서 담당한다.\n\n각 도형들은 모두 [Shape 추상 클래스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Shape.java#L12) 를 상속하고, \n공통으로 갖는 기능 및 변수를 선언하고 도형별로 다른 계산 법을 가지는 calcArea()는 추상 메소드로 선언한다. 이부분은 상속한 도형에서 override하여 구현한다.\n\n[도형 객체](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/Triangle.java) 를 선언하는 Factory들은 [ShapeFactory 인터페이스](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap05_FactoryPattern/src/ShapeFactory.java) 를\n상속받고 객체를 생성하는 create() 메소드를 구현한다.\n\nFactory 내부에서 전달받는 타입에 맞게 객체를 생성하는 책임을 갖는다. (Ex. RectangularShapeFactory)\n\n### 결과\n```\nRectangle\nP0: java.awt.Point[x=100,y=150]\nP1: java.awt.Point[x=150,y=100]\narea: 2500.0\n\nTrapezoid\nP0: java.awt.Point[x=200,y=150]\nP1: java.awt.Point[x=280,y=100]\nP2: java.awt.Point[x=170,y=100]\nP3: java.awt.Point[x=250,y=150]\narea: 4000.0\n\nParallelogram\nP0: java.awt.Point[x=330,y=150]\nP1: java.awt.Point[x=400,y=100]\nP2: java.awt.Point[x=300,y=100]\nP3: java.awt.Point[x=430,y=150]\narea: 5000.0\n\nTriangle\nP0: java.awt.Point[x=225,y=300]\nP1: java.awt.Point[x=200,y=250]\nP2: java.awt.Point[x=250,y=250]\narea: 1250.0\n\nRightTriangle\nP0: java.awt.Point[x=350,y=300]\nP1: java.awt.Point[x=300,y=250]\nP2: java.awt.Point[x=350,y=250]\narea: 1250.0\n```\n---\n\n## 6. 싱글톤 패턴 _ Singleton\n- 여러 객체가 생성되면 상태 관리가 어렵다.\n- 이를 해결하기 위해 객체 생성자를 중앙에서 관리하는 방법.\n- 객체가 한개이므로 항상 일관된 상태이다.\n- **멀티 쓰레드에서는 문제가 될 수 있다. (해결방법 존재)**\n\n#### 싱글톤 패턴 구현 방법\n- private 디폴트 생성자를 만든다.\n- 싱글톤 인스턴스를 저장하는 정적 멤버 변수를 생성한다.\n- 싱글톤 인스턴스를 반환하는 정적 팩토리 메소드를 구현한다.\n\n### ChocolateBoiler.java\n\n```java\npublic class ChocolateBoiler {\n    private static ChocolateBoiler instance = null;\n    private boolean empty;\n    private boolean boiled;\n\n    private ChocolateBoiler() {\n        empty = true;\n        boiled = false;\n    }\n\n    public static ChocolateBoiler getInstance() {\n        if (instance == null) {\n            instance = new ChocolateBoiler();\n        }\n        return instance;\n    }\n\n    public boolean isEmpty() {\n        return empty;\n    }\n\n    public boolean isBoiled() {\n        return boiled;\n    }\n\n    public void fill() {\n        if (isEmpty()) {\n            empty = false;\n            boiled = false;\n        }\n    }\n\n    public void drain() {\n        if (!isEmpty() && isBoiled()) {\n            empty = true;\n            boiled = false;\n        }\n    }\n\n    public void boil() {\n        if (!isEmpty() && !isBoiled()) {\n            boiled = true;\n        }\n    }\n}\n```\n\n### 멀티 쓰레드 환경에서의 문제점\n- 싱글톤 인스턴스를 만드는 메소드 : getInstance()는 Critical Section으로서 멀티 쓰레드가 해당 구역에 대해 race condition\n  이 발생하게 되면 의도치 않은 결과가 발생될 수 있다.\n\n#### 문제 코드 예시\n```java\npublic class Main {\n    public static void main(String[] args) {\n\n        HashSet<String> set = new HashSet<>();\n\n        for (int i = 0; i < 100; i++) {\n            int tmp = i;\n            new Thread(() -> {\n                ChocolateBoiler instance = ChocolateBoiler.getInstance();\n                set.add(instance.toString());\n                System.out.println(tmp + \": \" + System.currentTimeMillis() +\" , \"+ set.size());\n            }).start();\n        }\n    }\n}\n```\n<img width=\"637\" alt=\"스크린샷 2021-10-15 오전 11 47 51\" src=\"https://user-images.githubusercontent.com/42247724/137424490-4e49ac51-e09f-449d-8f47-8b8c0177e3ab.png\">\n\n- 실제로 객체가 여러개 생성되어 Set에 저장된 것을 확인할 수 있다.\n\n#### 해결방법 (1) - 동기화\n- 쓰레드들이 해당 구역을 동시에 접근할 수 없도록, lock을 사용한다. -> Synchronize\n- 문제점\n    - 단, 이렇게 하면 해당 구역에 대해서는 순차적으로 수행되므로 비효율적일 수 있다.\n    - 해당 Critical Section에 무거운 로직이 있다면 더욱 좋지 않다.\n```java\n// getInstance() 메소드 동기화\npublic synchronized static ChocolateBoiler getInstance() {\n    if (instance == null) {\n        instance = new ChocolateBoiler();\n    }\n    return instance;\n}\n```\n<img width=\"637\" alt=\"스크린샷 2021-10-15 오전 11 58 08\" src=\"https://user-images.githubusercontent.com/42247724/137425339-c8dbfce3-7343-429c-a027-91b7320c902b.png\">\n\n- 객체의 개수가 하나만 생성된 것을 확인할 수 있다.\n\n#### 해결방법 (2) - 미리 생성\n- Synchronized를 사용하지 않고 싱글톤 인스턴스를 프로그램이 생성될 때 같이 생성되도록 한다.\n- 미리 싱글톤 객체를 생성해 버리므로 null 체크 부분이 사라지게 되고 동기화의 필요성도 없어진다.\n- 문제점\n    - 단, 사용하지 않을 수도 있는 인스턴스를 프로그램 시작시 생성하므로 메모리 낭비가 일어날 수 있다.\n    - 객체를 생성하는데 시간을 소요하므로 프로그램의 시작이 느려질 수 있다.\n```java\nprivate static ChocolateBoiler instance = new ChocolateBoiler();\n\npublic static ChocolateBoiler getInstance() {\n    return instance;\n}\n```\n<img width=\"637\" alt=\"스크린샷 2021-10-15 오후 12 01 11\" src=\"https://user-images.githubusercontent.com/42247724/137425593-bbd8902c-1084-4173-bb79-4e4abf036660.png\">\n\n- 객체가 하나만 생성되는 것을 확인할 수 있다.\n\n#### 해결방법 (3) - DCL & volatile\n- Double Checking Locking을 사용해서 동기화 되는 부분을 줄임으로서 동기화를 개선한 방법이다.\n- 인스턴스가 생성되어 있는지 아닌지를 확인해서 생성되있지 않은 경우에만 동기화를 한다.\n- 생성 여부를 확인하고 되어있지 않을 때만 Lock을 걸게되므로 속도를 개선할 수 있다.\n```java\nprivate static volatile ChocolateBoiler instance = null;\n\npublic static ChocolateBoiler getInstance() {\n    if (instance == null) {\n        synchronized (ChocolateBoiler.class) {\n            if (instance == null)\n                instance = new ChocolateBoiler();\n        }\n    }\n    return instance;\n}\n```\n<img width=\"637\" alt=\"스크린샷 2021-10-15 오후 12 03 38\" src=\"https://user-images.githubusercontent.com/42247724/137425749-4628c12d-7a89-4283-85f2-b782b331fe5e.png\">\n\n- 객체가 하나만 생성되는 것을 확인할 수 있다.\n\n> ### Volatile이란?\n> \n> 멀티 프로세스 환경에서 멀티 쓰레드가 구동되면 각각의 프로세스에 쓰레드가 수행될 수 있다.\n> 이때 각 프로세스에는 속도가 상대적으로 느린 메모리를 보충하기 위해 캐시메모리가 존재한다.\n> \n> 하지만 캐시메모리는 프로세스 간 값이 다를 수 있다는 단점이 존재한다. \n> 또한 메모리에 저장된 값이랑 다를 가능성 또한 존재한다.\n> \n> 이를 보완하기 위해 **CPU 캐시메모리에 저장하지 않고 메모리에서 값을 읽고 저장해 사용하도록 명시하는 것**이 \"volatile\"이다.\n\n### 결과\n- 싱글톤 패턴을 이용하여 무분별한 객체 생성을 방지할 수 있다. 하지만 멀티 프로세스 & 멀티 쓰레드 환경에서\n동기화 문제가 발생할 수 있어서 이에 대한 해결방법이 필요했다.\n- 해결방법으로는 1. synchronized, 2. 선언과 동시에 생성, 3. DCL & volatile 이 있었다.\n각 해결방법에는 장단점이 존재하므로 적절하게 상황에 맞게 사용하면 되겠다.\n\n---\n\n## 7. ? 패턴 _ ?\n\n### 다이어그램\n\n### Main.java\n\n### 설명\n\n### 결과\n\n---\n\n## 8. ? 패턴 _ ?\n\n### 다이어그램\n\n### Main.java\n\n### 설명\n\n### 결과
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/README.md b/README.md
+--- a/README.md	(revision 2d5ddc512f4ad74935f168f274d4bcbcacc0d287)
++++ b/README.md	(date 1634268141876)
+@@ -7,8 +7,9 @@
+ 3. [Observer Pattern](#3-옵저버-패턴-_-observer)
+ 4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
+ 5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
+-6. []()
++6. [Singleton Pattern](#6-싱글톤-패턴-_-Singleton)
+ 7. []()
++8. []()
+ 
+ ## 1. 다형성
+ - 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.
+Index: chap06_Singleton/src/ChocolateBoiler.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/src/ChocolateBoiler.java b/chap06_Singleton/src/ChocolateBoiler.java
+new file mode 100644
+--- /dev/null	(date 1634266956543)
++++ b/chap06_Singleton/src/ChocolateBoiler.java	(date 1634266956543)
+@@ -0,0 +1,48 @@
++public class ChocolateBoiler {
++    private static volatile ChocolateBoiler instance = null;
++    private boolean empty;
++    private boolean boiled;
++
++    private ChocolateBoiler() {
++        empty = true;
++        boiled = false;
++    }
++
++    public static ChocolateBoiler getInstance() {
++        if (instance == null) {
++            synchronized (ChocolateBoiler.class) {
++                if (instance == null)
++                    instance = new ChocolateBoiler();
++            }
++        }
++        return instance;
++    }
++
++    public boolean isEmpty() {
++        return empty;
++    }
++
++    public boolean isBoiled() {
++        return boiled;
++    }
++
++    public void fill() {
++        if (isEmpty()) {
++            empty = false;
++            boiled = false;
++        }
++    }
++
++    public void drain() {
++        if (!isEmpty() && isBoiled()) {
++            empty = true;
++            boiled = false;
++        }
++    }
++
++    public void boil() {
++        if (!isEmpty() && !isBoiled()) {
++            boiled = true;
++        }
++    }
++}
+Index: chap06_Singleton/src/Singleton.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/src/Singleton.java b/chap06_Singleton/src/Singleton.java
+new file mode 100644
+--- /dev/null	(date 1634266215476)
++++ b/chap06_Singleton/src/Singleton.java	(date 1634266215476)
+@@ -0,0 +1,12 @@
++public class Singleton {
++    private static Singleton uniqueInstance = null;
++
++    private Singleton() {}
++
++    public static Singleton getInstance() {
++        if (uniqueInstance == null) {
++            uniqueInstance = new Singleton();
++        }
++        return uniqueInstance;
++    }
++}
+Index: chap06_Singleton/.idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/.idea/vcs.xml b/chap06_Singleton/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1634259865672)
++++ b/chap06_Singleton/.idea/vcs.xml	(date 1634259865672)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: chap06_Singleton/.idea/runConfigurations.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/.idea/runConfigurations.xml b/chap06_Singleton/.idea/runConfigurations.xml
+new file mode 100644
+--- /dev/null	(date 1634259865669)
++++ b/chap06_Singleton/.idea/runConfigurations.xml	(date 1634259865669)
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="RunConfigurationProducerService">
++    <option name="ignoredProducers">
++      <set>
++        <option value="com.android.tools.idea.compose.preview.runconfiguration.ComposePreviewRunConfigurationProducer" />
++      </set>
++    </option>
++  </component>
++</project>
+\ No newline at end of file
+Index: chap06_Singleton/src/Main.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/src/Main.java b/chap06_Singleton/src/Main.java
+new file mode 100644
+--- /dev/null	(date 1634266565852)
++++ b/chap06_Singleton/src/Main.java	(date 1634266565852)
+@@ -0,0 +1,32 @@
++import java.sql.Time;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.TimeZone;
++
++public class Main {
++    public static void main(String[] args) {
++
++        HashSet<String> set = new HashSet<>();
++        StringBuilder answer = new StringBuilder();
++
++        long s = System.currentTimeMillis();
++
++        for (int i = 0; i < 100; i++) {
++            int tmp = i;
++            new Thread(() -> {
++                ChocolateBoiler instance = ChocolateBoiler.getInstance();
++                set.add(instance.toString());
++                answer.append(tmp)
++                        .append(": ")
++                        .append(System.currentTimeMillis())
++                        .append(" , ")
++                        .append(set.size())
++                        .append("\n");
++            }).start();
++        }
++
++        long e = System.currentTimeMillis();
++        System.out.println(answer);
++        System.out.println(e - s);
++    }
++}
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"77526447-6be1-4308-8341-59a71bbc991b\" name=\"Changes\" comment=\"\">\n      <change beforePath=\"$PROJECT_DIR$/.idea/.gitignore\" beforeDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/modules.xml\" beforeDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/vcs.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/vcs.xml\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"ProjectId\" id=\"1zJHrRbPu8lXxrh3ITGlvnKGuEw\" />\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">\n    <property name=\"RunOnceActivity.OpenProjectViewOnStart\" value=\"true\" />\n    <property name=\"RunOnceActivity.ShowReadmeOnStart\" value=\"true\" />\n    <property name=\"WebServerToolWindowFactoryState\" value=\"false\" />\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"77526447-6be1-4308-8341-59a71bbc991b\" name=\"Changes\" comment=\"\" />\n      <created>1633859470120</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1633859470120</updated>\n      <workItem from=\"1633859474705\" duration=\"14000\" />\n    </task>\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 2d5ddc512f4ad74935f168f274d4bcbcacc0d287)
++++ b/.idea/workspace.xml	(date 1634268142007)
+@@ -1,10 +1,12 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="AutoImportSettings">
++    <option name="autoReloadType" value="SELECTIVE" />
++  </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="77526447-6be1-4308-8341-59a71bbc991b" name="Changes" comment="">
+-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
++    <list default="true" id="77526447-6be1-4308-8341-59a71bbc991b" name="Changes" comment="# &lt;type&gt;: &lt;subject&gt;&#10;##### Subject 50 characters ################# -&gt; |&#10;# If applied, this commit will&#10;&#10;&#10;# Body Message&#10;######## Body 72 characters ####################################### -&gt; |&#10;&#10;# Issue Tracker Number or URL&#10;&#10;# --- COMMIT END ---&#10;# Type can be&#10;#   Initial: 🎉 &#9;: initial commit&#10;#   Feat: ✨  &#9;  &#9;: new feature&#10;#   Fix: 🚑 &#9;&#9;: bug fix&#10;#   Deploy: 🚀&#9;&#9;: Anything related to Deployments/DevOps&#10;#   !BREAKING CHANGE: 🚑 : big change API&#10;#   Refactor:🔨&#9;&#9;: refactoring production code&#10;#   Style: 🎨   &#9;: formatting, missing semi colons, etc; no code change&#10;#   Comment: 📝 &#9;: add or change comment &#10;#   Docs: 📚     &#9;: changes to documentation&#10;#   Test: ☔️    &#9;: adding or refactoring tests&#10;#             &#9;&#9;  no productin code change&#10;#   Chore   &#9;&#9;: updating grunt tasks etc&#10;#           &#9;&#9;  no production code change&#10;# ------------------&#10;# Remember me ~&#10;#   Capitalize the subject line&#10;#     제목줄은 대문자로 시작한다.&#10;#   Use the imperative mood in the subject line&#10;#     제목줄은 명령어로 작성한다.&#10;#   Do not end the subject line with a period&#10;#     제목줄은 마침표로 끝내지 않는다.&#10;#   Separate subject from body with a blank line&#10;#     본문과 제목에는 빈줄을 넣어서 구분한다.&#10;#   Use the body to explain what and why vs. how&#10;#     본문에는 &quot;어떻게&quot; 보다는 &quot;왜&quot;와 &quot;무엇을&quot; 설명한다.&#10;#   Can use multiple lines with &quot;-&quot; for bullet points in body&#10;#     본문에 목록을 나타낼때는 &quot;-&quot;로 시작한다.&#10;# ------------------">
++      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -14,6 +16,14 @@
+   <component name="Git.Settings">
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+   </component>
++  <component name="GitSEFilterConfiguration">
++    <file-type-list>
++      <filtered-out-file-type name="LOCAL_BRANCH" />
++      <filtered-out-file-type name="REMOTE_BRANCH" />
++      <filtered-out-file-type name="TAG" />
++      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
++    </file-type-list>
++  </component>
+   <component name="ProjectId" id="1zJHrRbPu8lXxrh3ITGlvnKGuEw" />
+   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+   <component name="ProjectViewState">
+@@ -24,6 +34,12 @@
+     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+     <property name="WebServerToolWindowFactoryState" value="false" />
++    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
++    <property name="node.js.detected.package.eslint" value="true" />
++    <property name="node.js.detected.package.tslint" value="true" />
++    <property name="node.js.selected.package.eslint" value="(autodetect)" />
++    <property name="node.js.selected.package.tslint" value="(autodetect)" />
++    <property name="nodejs_package_manager_path" value="npm" />
+   </component>
+   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+   <component name="TaskManager">
+@@ -34,10 +50,23 @@
+       <option name="presentableId" value="Default" />
+       <updated>1633859470120</updated>
+       <workItem from="1633859474705" duration="14000" />
++      <workItem from="1634221211255" duration="49000" />
++      <workItem from="1634262238257" duration="5028000" />
+     </task>
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+     <option name="version" value="3" />
+   </component>
++  <component name="Vcs.Log.Tabs.Properties">
++    <option name="TAB_STATES">
++      <map>
++        <entry key="MAIN">
++          <value>
++            <State />
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
+ </project>
+\ No newline at end of file
+Index: chap06_Singleton/.idea/.gitignore
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/.idea/.gitignore b/chap06_Singleton/.idea/.gitignore
+new file mode 100644
+--- /dev/null	(date 1634259869479)
++++ b/chap06_Singleton/.idea/.gitignore	(date 1634259869479)
+@@ -0,0 +1,8 @@
++# Default ignored files
++/shelf/
++/workspace.xml
++# Editor-based HTTP Client requests
++/httpRequests/
++# Datasource local storage ignored files
++/dataSources/
++/dataSources.local.xml
+Index: chap06_Singleton/chap06_Singleton.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/chap06_Singleton.iml b/chap06_Singleton/chap06_Singleton.iml
+new file mode 100644
+--- /dev/null	(date 1634259865645)
++++ b/chap06_Singleton/chap06_Singleton.iml	(date 1634259865645)
+@@ -0,0 +1,11 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="JAVA_MODULE" version="4">
++  <component name="NewModuleRootManager" inherit-compiler-output="true">
++    <exclude-output />
++    <content url="file://$MODULE_DIR$">
++      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
++    </content>
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+Index: chap06_Singleton/.idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/.idea/misc.xml b/chap06_Singleton/.idea/misc.xml
+new file mode 100644
+--- /dev/null	(date 1634259865665)
++++ b/chap06_Singleton/.idea/misc.xml	(date 1634259865665)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
++    <output url="file://$PROJECT_DIR$/out" />
++  </component>
++</project>
+\ No newline at end of file
+Index: chap06_Singleton/.idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/chap06_Singleton/.idea/modules.xml b/chap06_Singleton/.idea/modules.xml
+new file mode 100644
+--- /dev/null	(date 1634259865659)
++++ b/chap06_Singleton/.idea/modules.xml	(date 1634259865659)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/chap06_Singleton.iml" filepath="$PROJECT_DIR$/chap06_Singleton.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file

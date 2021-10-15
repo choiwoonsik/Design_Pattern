@@ -1,0 +1,19 @@
+<changelist name="Uncommitted_changes_before_Update_at_2021_10_15_12_23_오후_[Changes]" date="1634268233574" recycled="false" toDelete="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2021_10_15_12_23_오후_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 2021/10/15 12:23 오후 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" />
+    <option name="AFTER_PATH" value="chap06_Singleton/out/production/chap06_Singleton/Main.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2021_10_15_12_23_오후_[Changes]/Main.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" />
+    <option name="AFTER_PATH" value="chap06_Singleton/out/production/chap06_Singleton/ChocolateBoiler.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2021_10_15_12_23_오후_[Changes]/ChocolateBoiler.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" />
+    <option name="AFTER_PATH" value="chap06_Singleton/out/production/chap06_Singleton/Singleton.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_2021_10_15_12_23_오후_[Changes]/Singleton.class" />
+  </binary>
+</changelist>

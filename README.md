@@ -7,7 +7,7 @@
 3. [Observer Pattern](#3-옵저버-패턴-_-observer)
 4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
 5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
-6. []()
+6. [Singleton Pattern](#6-싱글톤-패턴-_-Singleton)
 7. []()
 
 ## 1. 다형성

@@ -869,7 +869,7 @@ public static ChocolateBoiler getInstance() {
 
 - **DB는 사용하지만 DAO 패턴은 사용하지 않는** 경우
 
-#### Main.java _ [링크]()
+#### Main.java _ [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap07_DaoPattern/src/AddressBook_withoutDAO.java)
 ```java
 import java.sql.*;
 
@@ -983,13 +983,13 @@ public class AddressBook_withoutDAO {
 > 
 > DB에 접근해서 값을 가져오는 코드와 클라이언트 코드를 분리할 필요성이 보인다.
 
-## 2. AddressBook_withDao (DAO o, DB x)
+## 2. AddressBook_withoutDB (DAO o, DB x)
 
 - **DB는 사용하지 않고 DAO 패턴은 사용**하는 경우
 - DB에 넣었던 튜플을 하나의 객체화하여 관리한다.
 - DB대신 자료구조 List를 사용하여 객체에 대해 CRUD한다.
 
-#### Main.java _ [링크]()
+#### Main.java _ [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap07_DaoPattern/src/AddressBook_withoutDB.java)
 
 #### Person 객체 클래스 (POJO)
 ```java
@@ -1106,7 +1106,7 @@ public class PersonDaoImpl_withoutDB implements PersonDao {
 - PersonDao 인터페이스도 그대로 사용한다.
 - PersonDaoImpl 클래스만 DB를 사용하도록 변경한다.
 
-#### Main.java _ [링크]()
+#### Main.java _ [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap07_DaoPattern/src/AddressBook_withDaoDB.java)
 
 #### PersonDaoImpl 클래스 (DAO 구체 클래스 with DB)
 

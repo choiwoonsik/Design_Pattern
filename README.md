@@ -8,7 +8,9 @@
 4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
 5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
 6. [Singleton Pattern](#6-싱글톤-패턴-_-Singleton)
-7. []()
+7. [Doa Pattern](#7-DAO-패턴)
+8. []()
+9. []()
 
 ## 1. 다형성
 - 하나의 객체가 여러개의 타입을 가질 수 있는것을 말한다.
@@ -801,7 +803,455 @@ public static ChocolateBoiler getInstance() {
 
 ---
 
-## 7. ? 패턴 _ ?
+## 7. DAO 패턴
+
+> ### DAO 패턴의 사용 목적
+> 비지니스 로직과 DB를 분리하기 위해서 사용하는 패턴이다. DAO는 Data Access Object의 약자로 DB의 접근을 전담하게 된다.
+>
+> DB를 사용하는 방법이 변경되더라도 클라이언트 로직이 변경되지 않도록 DB 로직을 캡슐화 하여 분리하는 방법.
+
+> ### 설계
+> DAO :  기본적인 CRUD 인터페이스를 제공한다.
+> 
+> DaoImpl : DAO 인터페이스를 구현한 구체 클래스이다.
+> 
+> Value Object : DAO를 사용하여 데이터를 저장하는 POJO (plain old java obj)
+
+> ### JDBC (Java Database Connectivity)
+> 데이터베이스 비종속적 표준 자바 API이다. 다양한 DB를 동일한 인터페이스로 사용할 수 있도록 추상화 해준다.
+> 각종 DB는 JDBC Driver를 통해서 연결하고 사용하게 된다.
+> 
+> ### ODBC
+> 예전 다양한 DB (oracle, msSql, mySql, h2 등)이 존재했을 때 각기 다른 인터페이스를 갖고 있었다. 이를 하나의
+> 인터페이스로 통합하여 사용하기 위해 나온 것이 ODBC이다. windows 환경에서 DB들에 대해 공통의 인터페이스를 제공하기 위해 나온
+> 것이라면 JDBC는 java 환경에서 DB들을 하나의 API로 접근하기 위해 개발된 것이다.
+> 
+> ![IMG_A26350259277-1](https://user-images.githubusercontent.com/42247724/139358120-931f0f4b-9ad0-4e06-8cd3-3439aa6ca90e.jpeg)
+
+### JDBC
+
+1. **DB에 연결**
+   - DriverManager.getConnection("DB URL") 을 통해서 DB에 연결한다.
+   - Connection 인터페이스를 반환 받는다.
+   - DB URL이 필요하다
+     - MySql : "jdbc:mysql://localhost:3306/" + "db_name"
+     - Oracle : "jdcc:oracle:thin:@//localhost:1521/" + "db_name"
+2. **Connection 인터페이스**
+   - 자바 Application과 DB를 연결한 **세션 유지 및 쿼리를 실행**한다.
+   - 쿼리를 실행시킬 수 있는 Statement, PreparedStatement를 생성하는 Factory 이다.
+   - createStatement() : SQL 쿼리문을 실행할 수 있는 Statement 인터페이스 객체를 생성한다.
+   - close() : DB 연결 세션을 종료한다.
+3. **Statement 인터페이스**
+   - SQL 쿼리를 DB에서 실행시킨다.
+   - SELECT 쿼리 수행 시 ResultSet 인터페이스 객체를 생성하는 Factory이다.
+   - executeQuery("sql") : SELECT 쿼리를 수행하고 ResultSet을 반환한다.
+   - executeUpdate("sql") : 그 외 쿼리를 수행한다. 반환값은 따로 없다고 봐도 무방.
+4. **ResultSet**
+   - 테이블의 한 행을 가리키는 커서이다.
+   - 커서는 첫 번째 행 이전을 가리키고 있고 next()를 이용해서 다음 데이터가 존재하는지 확인하고 접근해야한다.
+   - next() : 현재 위치에서 다음 행으로 이동한다. 가능 여부에 따라 T/F를 반환한다.
+   - getInt("colIndex" or "colName") : 컬럼의 인덱스 또는 이름을 주면 해당 컬럼 데이터를 정수로 반환한다.
+   - getString("colIndex" or "colName") : 똑같은데 문자열로 반환한다.
+
+
+### 3가지 방식으로 구현
+1. AddressBook_withoutDao
+   - DB는 사용하지만 DAO 없이 구현
+   - DB는 Sqlite 사용
+2. AddressBook_withoutDB
+   - DB는 사용하지않고 DAO 를 사용하여 구현
+   - DB 대신 자료구조 ArrayList 사용
+3. AddressBook_withDaoDB
+   - DB & DAO 둘다 사용하여 구현
+
+## 1. AddressBook_withoutDao (DAO x, DB o)
+
+- **DB는 사용하지만 DAO 패턴은 사용하지 않는** 경우
+
+#### Main.java _ [링크]()
+```java
+import java.sql.*;
+
+public class AddressBook_withoutDAO {
+    final static String DB_FILE_NAME = "addressBook.db";
+    final static String DB_TABLE_NAME = "persons";
+
+    public static void main(String[] args) {
+        Connection connection = null;
+        ResultSet rs = null;
+        Statement statement = null;
+
+        try {
+            connection = DriverManager.getConnection(
+                    "jdbc:sqlite:" + DB_FILE_NAME
+            );
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);
+
+            final String table = "(ID INTEGER PRIMARY KEY AUTOINCREMENT, name text, address text)";
+
+            statement.executeUpdate(
+                    "DROP TABLE IF EXISTS " + DB_TABLE_NAME
+            );
+            statement.executeUpdate(
+                    "CREATE TABLE " + DB_TABLE_NAME + table
+            );
+
+            System.out.println("---inserting ...");
+            statement.execute(
+                    "INSERT INTO persons(name, address) VALUES('woonsik choi', '135 anyang')"
+            );
+            statement.execute(
+                    "insert into persons(name, address) values('boonsik kim', '531 gangnam')"
+            );
+
+            System.out.println("---finding all ...");
+            rs = statement.executeQuery(
+                    "select * from persons where id < 4 order by id"
+            );
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID")
+                        + " "
+                        + rs.getString("name")
+                        + " "
+                        + rs.getString("address"));
+            }
+
+            System.out.println("---updating ...");
+            statement.execute(
+                    "update persons SET name = 'handsome guy woonsik' where id = 1"
+            );
+
+            System.out.println("---see if updated ...");
+            rs = statement.executeQuery("" +
+                    "select * from persons where id = 1"
+            );
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID")
+                        + " "
+                        + rs.getString("name")
+                        + " "
+                        + rs.getString("address"));
+            }
+
+            System.out.println("---deleting ...");
+            statement.execute(
+                    "delete from persons where id = 1"
+            );
+
+            System.out.println("---finding all after delete ...");
+            rs = statement.executeQuery(
+                    "select * from persons where id < 4 order by id"
+            );
+            while (rs.next()) {
+                System.out.println(rs.getInt("ID")
+                        + " "
+                        + rs.getString("name")
+                        + " "
+                        + rs.getString("address"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (statement != null) {
+                    statement.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+> #### 결과
+> <img width="417" alt="스크린샷 2021-10-29 오전 10 37 29" src="https://user-images.githubusercontent.com/42247724/139359144-4aa7d723-2001-4dbe-baac-68c3b79b1ab0.png">
+>
+> <img width="417" alt="스크린샷 2021-10-29 오전 10 39 15" src="https://user-images.githubusercontent.com/42247724/139359163-90ed6ab7-6bc5-4460-aba7-2cef048e0bfb.png">
+> persons 테이블에 person 정보가 정상적으로 Create, Read, Update, Delete 되는것을 확인할 수 있다.
+> 
+> #### 단점
+> DB 접근 쿼리문과 비지니스 로직이 하나로 강하게 결합되어있는 것을 확인할 수 있다. DB에서 데이터를 가져오는 과정에 변경이 생기면 자연스럽게 
+> 클라이언트 코드도 변경이 불가피하고, 쿼리문이 반복되면 코드의 중복이 발생하게 된다.
+> 
+> DB에 접근해서 값을 가져오는 코드와 클라이언트 코드를 분리할 필요성이 보인다.
+
+## 2. AddressBook_withDao (DAO o, DB x)
+
+- **DB는 사용하지 않고 DAO 패턴은 사용**하는 경우
+- DB에 넣었던 튜플을 하나의 객체화하여 관리한다.
+- DB대신 자료구조 List를 사용하여 객체에 대해 CRUD한다.
+
+#### Main.java _ [링크]()
+
+#### Person 객체 클래스 (POJO)
+```java
+public class Person {
+    private static int count = 0;
+    private int id;
+    private String name;
+    private String address;
+
+    public Person(String name, String address) {
+        this.name = name;
+        this.address = address;
+        this.id = ++count;
+    }
+
+    public Person(int id, String name, String address) {
+        this.id = id;
+        this.name = name;
+        this.address = address;
+    }
+
+    @Override
+    public String toString() {
+        return "Person> " +
+                "id=" + id +
+                ", name='" + name + "'" +
+                ", address='" + address + "'";
+    }
+    /*
+        getter, setter 생략
+     */
+}
+```
+
+#### PersonDao Interface 클래스 (DAO)
+```java
+import java.util.List;
+
+public interface PersonDao {
+    void insert(Person person);
+
+    List<Person> findAll();
+
+    Person findById(int id);
+
+    void update(int id, Person person);
+
+    void delete(Person person);
+
+    void deleteById(int id);
+}
+```
+
+#### PersonDaoImpl_withoutDB 클래스 (DAO 구체 클래스 with List)
+```java
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class PersonDaoImpl_withoutDB implements PersonDao {
+    List<Person> personList;
+
+    public PersonDaoImpl_withoutDB() {
+        this.personList = new ArrayList<>();
+    }
+
+    @Override
+    public void insert(Person person) {
+        personList.add(person);
+    }
+
+    @Override
+    public List<Person> findAll() {
+        return personList;
+    }
+
+    @Override
+    public Person findById(int id) {
+        return personList.stream()
+                .filter(p -> p.getId() == id)
+                .collect(Collectors.toList()).get(0);
+    }
+
+    @Override
+    public void update(int id, Person person) {
+        personList.stream()
+                .filter(o -> o.getId() == id)
+                .findFirst().ifPresent(p -> {
+                    p.setName(person.getName());
+                    p.setAddress(person.getAddress());
+                });
+    }
+
+    @Override
+    public void delete(Person person) {
+        deleteById(person.getId());
+    }
+
+    @Override
+    public void deleteById(int id) {
+        personList.stream()
+                .filter(p -> p.getId() == id)
+                .findFirst()
+                .map(o -> personList.remove(o));
+    }
+}
+```
+
+## 3. AddressBook_withDaoDB (DAO o, DB o)
+
+- DB도 사용하고, DAO도 사용하는 방식
+- 구체 클래스의 구현 코드만 변경하면 된다.
+- Person 객체를 그대로 사용한다.
+- PersonDao 인터페이스도 그대로 사용한다.
+- PersonDaoImpl 클래스만 DB를 사용하도록 변경한다.
+
+#### Main.java _ [링크]()
+
+#### PersonDaoImpl 클래스 (DAO 구체 클래스 with DB)
+
+```java
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PersonDaoImpl implements PersonDao {
+    final static String DB_FILE_NAME = "addressBook.db";
+    final static String DB_TABLE_NAME = "persons";
+
+    Statement statement = null;
+    Connection connection = null;
+    ResultSet rs = null;
+
+    public PersonDaoImpl() {
+        final String table = " (ID INTEGER PRIMARY KEY AUTOINCREMENT, name text, address text)";
+        try {
+            this.connection = DriverManager.getConnection(
+                    "jdbc:sqlite:" + DB_FILE_NAME
+            );
+            this.statement = connection.createStatement();
+            this.statement.setQueryTimeout(30);
+
+            statement.executeUpdate(
+                    "DROP TABLE IF EXISTS " + DB_TABLE_NAME
+            );
+            statement.executeUpdate(
+                    "CREATE TABLE " + DB_TABLE_NAME + table
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void insert(Person person) {
+        try {
+            String format = "INSERT INTO %s VALUES(%d, '%s', '%s')";
+            String query = String.format(format,
+                    DB_TABLE_NAME, person.getId(), person.getName(), person.getAddress());
+            statement.executeUpdate(query);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    @Override
+    public List<Person> findAll() {
+        ArrayList<Person> people = new ArrayList<>();
+        try {
+            String format = "SELECT * FROM %s";
+            String query = String.format(format, DB_TABLE_NAME);
+            rs = statement.executeQuery(query);
+
+            while (rs.next()) {
+                people.add(new Person(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address"))
+                );
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return people;
+    }
+
+    @Override
+    public Person findById(int id) {
+        Person person = null;
+        try {
+            String format = "SELECT * from %s where id=%d";
+            String query = String.format(format, DB_TABLE_NAME, id);
+            rs = statement.executeQuery(query);
+            if (rs.next()) {
+                person = new Person(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("address")
+                );
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return person;
+    }
+
+    @Override
+    public void update(int id, Person person) {
+        Person p = findById(id);
+
+        if (p != null) {
+            try {
+                String format = "UPDATE %s SET name='%s', address='%s' WHERE id=%d";
+                String query = String.format(
+                        format, DB_TABLE_NAME, person.getName(), person.getAddress(), person.getId()
+                );
+                statement.executeUpdate(query);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void delete(Person person) {
+        deleteById(person.getId());
+    }
+
+    @Override
+    public void deleteById(int id) {
+        try {
+            String format = "DELETE FROM %s where id=%d";
+            String query = String.format(format, DB_TABLE_NAME, id);
+            statement.executeUpdate(query);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+}
+```
+
+> #### 결과
+> <img width="598" alt="스크린샷 2021-10-31 오후 12 42 27" src="https://user-images.githubusercontent.com/42247724/139566406-261e7849-a06d-4708-89de-a03f956f1438.png">
+
+### 다이어그램
+
+<img width="585" alt="스크린샷 2021-10-31 오후 12 32 02" src="https://user-images.githubusercontent.com/42247724/139566090-9a50d163-9a3c-4a83-a5cd-2854371e568b.png">
+
+### 설명
+
+- 기존 Main 클래스에서 DB에 직접 CRUD하던 튜플을 Person 객체로 변환했다.
+- DB에 Person 객체를 CRUD하기 위해 Person DAO 인터페이스를 만들었다.
+- PersonDao 인터페이스의 구체 클래스 PersonDaoImpl을 구현했다.
+
+### 결과
+
+- DAO 인터페이스를 사용함으로서 비지니스 로직과 CRUD 구현 로직을 별도로 분리할 수 있었다.
+- 어떤 DB를 사용하는지가 애플리케이션 코드에 영향을 주지 않도록 했다.
+- DI를 이용하면 생성자 부분도 필요하지 않으므로 완전한 캡슐화를 이루고 분리원칙을 지킬 수 있다.
+
+---
+
+## 8. ? 패턴 _ ?
 
 ### 다이어그램
 
@@ -813,7 +1263,7 @@ public static ChocolateBoiler getInstance() {
 
 ---
 
-## 8. ? 패턴 _ ?
+## 9. ? 패턴 _ ?
 
 ### 다이어그램
 

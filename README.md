@@ -640,6 +640,7 @@ P1: java.awt.Point[x=300,y=250]
 P2: java.awt.Point[x=350,y=250]
 area: 1250.0
 ```
+
 ---
 
 ## 6. 싱글톤 패턴 _ Singleton
@@ -653,7 +654,7 @@ area: 1250.0
 - 싱글톤 인스턴스를 저장하는 정적 멤버 변수를 생성한다.
 - 싱글톤 인스턴스를 반환하는 정적 팩토리 메소드를 구현한다.
 
-### ChocolateBoiler.java
+### ChocolateBoiler.java _ [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap06_Singleton/src/ChocolateBoiler.java#L11)
 
 ```java
 public class ChocolateBoiler {
@@ -1260,6 +1261,7 @@ public class PersonDaoImpl implements PersonDao {
 ### 설명
 
 ### 결과
+
 
 ---
 

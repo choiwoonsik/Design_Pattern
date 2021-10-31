@@ -8,7 +8,7 @@
 4. [Decorator Pattern](#4-데코레이터-패턴-_-decorator)
 5. [Factory Pattern](#5-팩토리-메소드-패턴-_-Factory-Method)
 6. [Singleton Pattern](#6-싱글톤-패턴-_-Singleton)
-7. [Doa Pattern](#7-DAO-패턴)
+7. [DAO Pattern](#7-DAO-패턴)
 8. []()
 9. []()
 

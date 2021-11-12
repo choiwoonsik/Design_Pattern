@@ -12,6 +12,9 @@
 8. [DAO Pattern Refactoring](#7-2-dao-pattern-refactoring-with-generic)
 9. [Adapter Pattern](#8-adapter-pattern)
 10. [Facade Pattern](#9-facade-pattern)
+11. [Command Pattern](#10-command-pattern)
+12. []()
+13. []()
 
 ## 1. Polymorphism
 
@@ -1665,15 +1668,221 @@ DAO가 필요한 객체마다 동일한 인터페이스를 상속 받아서 필�
 
 ---
 
-## 10. Pattern
+## 10. Command Pattern
 
-### 코드
+- 요구사항(요청, 명령)을 객체로 캡슐화 시킨다. 이렇게 함으로써 주어진 여러 기능을 실행할 수 있는 재사용성
+이 높은 클래스를 설계할 수 있다.  
+  - 이벤트가 발생했을 때 실행될 기능이 다양하면서도 변경이 필요한 경우에 이벤트를 발생시키는 클래스를
+  변경하지 않고 재사용할 때 유용하다.
+- 요구사항 (기능)을 캡슐화 함으로써 기능의 실행을 요구하는 호출자 클래스와
+실제 기능을 실행하는 수신자 클래스 간의 의존성을 분리할 수 있다.
+- 결과적으로 **다양한 기능이 추가되어도 호출자는 수정없이 기능을 사용**할 수 있다.
 
-### 다이어그램
+#### 예시
+
+- 계산기
+  - 숫자 버튼과 연산자 버튼, = 버튼 등 버튼마다 다른 기능을 갖고 있다.
+- 통합 리모콘
+  - 티비 on/off, 전등 on/off, 에어컨 on/off 을 통합으로 관리하는 
+  리모콘의 경우 다 같은 버튼이지만 기능이 다르다.
+
+#### 정리
+
+즉, 각기 다른 기능들을 하나로 캡슐화 하여 버튼이라는 기능과 커플링이 가능하게 하는
+것이 목적이다. 버튼은 기능이 무엇인지 신경쓰지 않고 수행만 하게 하면 된다.
+
+사용하는 객체마다 다른 api를 하나의 인터페이스로 캡슐화 하여 실행과 요청을 분리한다.
+
+## 계산기 코드
 
 ### 설명
 
+- 숫자, 연산자, =, c (클리어) 등 다른 기능들에 대해서 하나의 버튼으로 
+수행할 수 있게한다.
+- 숫자는 NumberBtnCommand, 그외 연산자는 OperatorBtnCommand 로 기능수행
+- 둘다 Command 라는 인터페이스를 implements하여 캡슐화 한다. 이제 기능 수행은
+execute()라는 단일 메소드를 통해서만 접근하게 된다.
+- CommandButton을 상속하여 버튼 역활을 갖게 한다.
+- Main에서는 어떤 버튼이건 Command 인터페이스라면 execute()하게 한다.
+구현체가 알아서 적절한 기능을 하게 된다.
+
+### 다이어그램
+<img width="646" alt="스크린샷 2021-11-12 오전 11 45 26" src="https://user-images.githubusercontent.com/42247724/141401563-dcf39138-bb1a-4cde-96f7-56aa32974b4c.png">
+
+### Command Interface [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap09_CommandPattern/src/Command.java)
+
+```java
+public interface Command {
+    void execute();
+}
+```
+- 다양한 기능들을 하나의 커맨드로 추상화 시키기 위한 인터페이스이다.
+
+### NumberBtnCommand class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap09_CommandPattern/src/NumberBtnCommand.java#L19) 
+
+```java
+public class NumberBtnCommand extends CommandButton implements Command {
+    Calculator calculator;
+    JLabel display;
+
+    public NumberBtnCommand(
+            String text, Dimension dimension,
+            ActionListener listener, Calculator calculator, JLabel display)
+    {
+        super(text, dimension, listener);
+        this.calculator = calculator;
+        this.display = display;
+    }
+
+    @Override
+    public void execute() {
+        if (calculator.isOperand1Set() && calculator.isOperatorSet()) {
+            int tmp = calculator.getOperand2();
+            tmp *= 10;
+            tmp += Integer.parseInt(getText());
+            display.setText(tmp+"");
+            calculator.setOperand2(tmp);
+            calculator.setOperand2Set(true);
+        } else {
+            int tmp = calculator.getOperand1();
+            tmp *= 10;
+            tmp += Integer.parseInt(getText());
+            display.setText(tmp+"");
+            calculator.setOperand1(tmp);
+            calculator.setOperand1Set(true);
+        }
+    }
+}
+```
+- 숫자가 왔을 때 Command 인터페이스의 execute()를 구현하여 적절한 수행을 한다.
+
+### OperatorBtnCommand class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap09_CommandPattern/src/OperatorBtnCommand.java#L19)
+
+```java
+public class OperatorBtnCommand extends CommandButton implements Command {
+    Calculator calculator;
+    JLabel display;
+
+    public OperatorBtnCommand(
+            String text, Dimension dimension,
+            ActionListener listener, Calculator calculator, JLabel display)
+    {
+        super(text, dimension, listener);
+        this.calculator = calculator;
+        this.display = display;
+    }
+
+    @Override
+    public void execute() {
+        String r = "0";
+        if (calculator.isOperand1Set() && !calculator.isOperand2Set()
+                && !getText().equals("c") && !getText().equals("=")) {
+            calculator.setOperatorSet(true);
+            calculator.setOperator(getText().charAt(0));
+            return;
+        } else if (calculator.isOperand1Set() && calculator.isOperatorSet() && calculator.isOperand2Set()) {
+            if (getText().equals("=")) {
+                int f = calculator.getOperand1();
+                int b = calculator.getOperand2();
+                System.out.println(f + " " + calculator.getOperator() + " " + b);
+                switch (calculator.getOperator()) {
+                    case '+':
+                        r = (f + b) + "";
+                        break;
+                    case '-':
+                        r = (f - b) + "";
+                        break;
+                    case '*':
+                        r = (f * b) + "";
+                        break;
+                    case '/':
+                        if (b == 0) {
+                            r = null;
+                            break;
+                        } else r = (f / b) + "";
+                }
+            }
+        }
+        display.setText(r);
+        calculator.setOperand1Set(false);
+        calculator.setOperand2Set(false);
+        calculator.setOperatorSet(false);
+        calculator.setOperand1(0);
+        calculator.setOperand2(0);
+    }
+}
+```
+- 숫자 입력 상황과 연산자 입력 상황에 따라 적절히 계산한다.
+- +, -, *, /, =, c 를 처리하게 된다.
+
+### Main class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap09_CommandPattern/src/CalcGUIV1.java#L70)
+
+```java
+public class CalcGUIV1 extends JFrame implements ActionListener {
+
+    // ~ 생략
+    String[] buttonText = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", " ", " ", "+", "-", "*", "/", "c" , "=" };
+    JLabel display = new JLabel();
+
+    CalcGUIV1() {
+        super("calculator");
+        calculator = new Calculator();
+        // display 설정 생략
+        clear();
+    }
+
+    public JPanel getDisplayPanel() {
+        // 생략
+        return displayPanel;
+    }
+    public JPanel getButtonPanel() {
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(5,3,10,5));
+
+        /* 
+        숫자용 버튼과 연산자용 버튼을 만든다. 이렇게 함으로서 execute() 명령어 하나로
+        필요한 기능을 수행하게 할 수 있다. 
+         */
+        CommandButton numberBtn;
+        CommandButton operBtn;
+
+        for (int i = 0; i < 10; i++) {
+            numberBtn = new NumberBtnCommand(buttonText[i], buttonDimension, this, calculator, display);
+            buttonPanel.add(numberBtn);
+        }
+        for (int i = 10; i < buttonText.length; i++) {
+            operBtn = new OperatorBtnCommand(buttonText[i], buttonDimension, this, calculator, display);
+            buttonPanel.add(operBtn);
+        }
+        return buttonPanel;
+    }
+
+    public void clear() {
+        display.setText("0");
+    }
+
+    // 이곳에서 버튼이 눌리면 execute() 명령을 수행한다. 기능 별로 구현코드가 작동된다.
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() instanceof Command) {
+            ((Command) e.getSource()).execute();
+        }
+    }
+
+    public static void main(String[] args) {
+        CalcGUIV1 c = new CalcGUIV1();
+        c.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        c.setVisible(true);
+    }
+}
+```
+- Command 패턴을 사용함으로서 실행 코드와 요청을 분리할 수 있다.
+- 버튼이 눌렸을 때 수행되어야 할 기능은 Command 인터페이스를 구현한 클래스에서 작성하므로
+기능이 수정/추가 되어도 서비스 로직에서는 수정이 필요 없고 구현 클래스만 건들면 된다.
+
 ### 결과
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/141403689-c0ea9b22-41c2-488a-abf5-4883cd8a3bd2.gif)
+
 
 ---
 

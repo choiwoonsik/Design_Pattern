@@ -1918,7 +1918,7 @@ on, off, sleep 등이 있을 수 있다.
 - 공통 기능인 quitInput()은 default 메소드로 만들었다.
 - 상태 간 상태가 변경 되는 Transition을 인터페이스에 작성하고 이를 각자 구현한다.
 
-#### Calculator.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/Calculator.java#L50)
+#### Calculator.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/Calculator.java#L39)
 
 ```java
 public class Calculator {
@@ -1979,6 +1979,19 @@ public class Calculator {
 - 현재 state를 if문 등을 통해 확인하지 않고 입력 값에 따라 decimalInput(), operatorInput(),
 quitInput()을 수행하도록 한다.
 - STATE 인터페이스를 implements 한 각 상태 구현 코드에서 주어진 전이 값에 따라 적절한 수행을 한다.
+
+#### STATE interface [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/STATE.java)
+```java
+public interface STATE {
+    void decimalInput(String value);
+    void operatorInput(String oper);
+    default void quitInput(){
+        System.out.println("연산 종료");
+    }
+}
+```
+- 모든 상태들은 STATE 인터페이스를 상속받아서 관리한다.
+- 상태들은 자신의 현 상태에 따라 전이를 적절히 수행하게 implement 한다. 
 
 #### noOperandOne.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/noOperandOne.java#L9)
 

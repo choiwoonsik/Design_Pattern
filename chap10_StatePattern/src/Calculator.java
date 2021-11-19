@@ -29,21 +29,10 @@ public class Calculator {
 
     void printOutResult() {
         switch (operator) {
-            case '+':
-                System.out.printf("%d + %d = %d\n", operand1, operand2, operand1 + operand2);
-                break;
-
-            case '-':
-                System.out.printf("%d - %d = %d\n", operand1, operand2, operand1 - operand2);
-                break;
-
-            case '*':
-                System.out.printf("%d * %d = %d\n", operand1, operand2, operand1 * operand2);
-                break;
-
-            case '/':
-                System.out.printf("%d / %d = %d\n", operand1, operand2, operand1 / operand2);
-                break;
+            case '+' -> System.out.printf("%d + %d = %d\n", operand1, operand2, operand1 + operand2);
+            case '-' -> System.out.printf("%d - %d = %d\n", operand1, operand2, operand1 - operand2);
+            case '*' -> System.out.printf("%d * %d = %d\n", operand1, operand2, operand1 * operand2);
+            case '/' -> System.out.printf("%d / %d = %d\n", operand1, operand2, operand1 / operand2);
         }
     }
 

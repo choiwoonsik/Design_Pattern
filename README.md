@@ -1883,10 +1883,222 @@ public class CalcGUIV1 extends JFrame implements ActionListener {
 ### 결과
 ![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/141403689-c0ea9b22-41c2-488a-abf5-4883cd8a3bd2.gif)
 
+---
+
+## 11. State Pattern
+
+#### 상태(State)란?
+하나의 오브젝트가 시점에 따라 특정 상태에 있어야 한다. 처음에 가지게 되는 
+초기 상태 또는 상황에 따라 여러 상태 중 하나의 상태를 가질 수 있다.
+
+한 상태에서 다른 상태로 전환하는 것을 전이(Transition) 이라고 한다. 예를
+들어 게임 캐릭터의 경우 걷기, 뛰기, 멈추기, 공격하기, 방어하기 등이 있고, 가전제품의 경우
+on, off, sleep 등이 있을 수 있다.
+
+이러한 다양한 상태를 if 문으로 상태를 통제하는 방식은 추가적인 상태가 생기거나
+구현의 변경이 발생했을 때 여러곳의 코드가 변경될 수 있다는 문제가 있다.
+
+이를 해결하기 위해 **상태를 한 곳에서 관리하기 위한 패턴**이 상태 패턴이다.
+
+### 설명
+
+두개의 인자와 한개의 연산자를 받고 "="을 입력 받으면 계산을 하는 Calculator를 구현한다. 이때 계산기의
+상태로는 첫번째 인자 없음, 연산자 없음, 두번째 인자 없음, 계산("=") 인자 없음으로 총 4개의 상태가 존재하게 된다.
+
+또한, 각 상태 별로 숫자 입력, 연산자 입력, 종료 입력의 3가지 전이(Transition)가 발생할 수 있다.
+
+따라서, 모든 상태들을 하나의 상태 인터페이스를 상속하게 하여 각 상태 별로 전이에 대해 적절히 구현하도록 한다. 
+
+### 다이어그램
+
+<img width="908" alt="스크린샷 2021-11-19 오후 3 00 56" src="https://user-images.githubusercontent.com/42247724/142573226-7ca99bf7-2055-4ffb-9ce4-4ab854484580.png">
+
+- 모든 상태들은 STATE 인터페이스를 implements 하도록 한다.
+- 공통 기능인 quitInput()은 default 메소드로 만들었다.
+- 상태 간 상태가 변경 되는 Transition을 인터페이스에 작성하고 이를 각자 구현한다.
+
+#### Calculator.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/Calculator.java#L50)
+
+```java
+public class Calculator {
+    int operand1; // 첫 번째 피 연산자값 저장
+    int operand2; // 두 번째 피 연산자값 저장
+    char operator; // 사칙 연산자 저장
+
+    BufferedReader br;
+    STATE noOperandOne;
+    STATE noOperandTwo;
+    STATE noOperator;
+    STATE calculate;
+    STATE state;
+
+    public Calculator() {
+        this.noOperandOne = new noOperandOne(this);
+        this.noOperandTwo = new noOperandTwo(this);
+        this.noOperator = new noOperator(this);
+        this.calculate = new calculate(this);
+        this.state = noOperandOne;
+        br = new BufferedReader(new InputStreamReader(System.in));
+    }
+
+    public void setState(STATE state) {
+        this.state = state;
+    }
+
+    void printOutResult() {
+        switch (operator) {
+            case '+' -> System.out.printf("%d + %d = %d\n", operand1, operand2, operand1 + operand2);
+            case '-' -> System.out.printf("%d - %d = %d\n", operand1, operand2, operand1 - operand2);
+            case '*' -> System.out.printf("%d * %d = %d\n", operand1, operand2, operand1 * operand2);
+            case '/' -> System.out.printf("%d / %d = %d\n", operand1, operand2, operand1 / operand2);
+        }
+    }
+
+    boolean run() throws IOException {
+        System.out.println("정수 또는 +, -, *, /, = 기호 중 한 개를 입력하세요. (종료 : q)");
+        String input = br.readLine();
+        char ch;
+        if (input.equals("")) {
+            ch = '=';
+            input = "=";
+        } else ch = input.charAt(0);
+
+        if (ch == 'q' || ch == 'Q') {
+            state.quitInput();
+            return false;
+        } else if (ch >= '0' && ch <= '9') {
+            state.decimalInput(input);
+        } else {
+            state.operatorInput(input);
+        }
+        return true;
+    }
+}
+```
+- 현재 state를 if문 등을 통해 확인하지 않고 입력 값에 따라 decimalInput(), operatorInput(),
+quitInput()을 수행하도록 한다.
+- STATE 인터페이스를 implements 한 각 상태 구현 코드에서 주어진 전이 값에 따라 적절한 수행을 한다.
+
+#### noOperandOne.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/noOperandOne.java#L9)
+
+```java
+public class noOperandOne implements STATE {
+    Calculator calculator;
+
+    public noOperandOne(Calculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void decimalInput(String value) {
+        calculator.operand1 = Integer.parseInt(value);
+        System.out.println("첫번째 인자 : " + calculator.operand1);
+        calculator.setState(calculator.noOperator);
+    }
+
+    @Override
+    public void operatorInput(String oper) {
+        System.out.println("숫자를 입력하세요.");
+    }
+}
+```
+- 첫번째 인자값을 받아야 하는 상태
+
+#### noOperator.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/noOperator.java#L14)
+
+```java
+public class noOperator implements STATE{
+    Calculator calculator;
+
+    public noOperator (Calculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void decimalInput(String value) {
+        System.out.println("연산 기호를 입력하세요.");
+    }
+
+    @Override
+    public void operatorInput(String oper) {
+        char tmp = oper.charAt(0);
+        if (tmp == '+' || tmp == '-' || tmp == '*' || tmp == '/') {
+            calculator.operator = oper.charAt(0);
+            System.out.println("연산자 : " + calculator.operator);
+            calculator.setState(calculator.noOperandTwo);
+        } else {
+            System.out.println("잘못된 연산 기호입니다. 다시 입력하세요.");
+        }
+    }
+}
+```
+- 연산기호를 받아야 하는 상태
+
+#### noOperandTwo.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/noOperandTwo.java#L9)
+
+```java
+public class noOperandTwo implements STATE {
+    Calculator calculator;
+
+    public noOperandTwo(Calculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void decimalInput(String value) {
+        calculator.operand2 = Integer.parseInt(value);
+        System.out.println("두번째 인자 : " + calculator.operand2);
+        calculator.setState(calculator.calculate);
+    }
+
+    @Override
+    public void operatorInput(String oper) {
+        System.out.println("숫자를 입력하세요.");
+    }
+}
+```
+- 두번째 인자값을 받아야 하는 상태
+
+#### calculate.class [코드](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap10_StatePattern/src/calculate.java#L14)
+
+```java
+public class calculate implements STATE{
+    Calculator calculator;
+
+    public calculate (Calculator calculator) {
+        this.calculator = calculator;
+    }
+
+    @Override
+    public void decimalInput(String value) {
+        System.out.println("잘못된 입력입니다. '='를 입력하세요.");
+    }
+
+    @Override
+    public void operatorInput(String oper) {
+        char c = oper.charAt(0);
+        if (c == '=') {
+            calculator.printOutResult();
+            calculator.setState(calculator.noOperandOne);
+        } else {
+            System.out.println("잘못된 입력입니다. '='를 입력하세요.");
+        }
+    }
+}
+```
+- 결과를 내기 위해 '='를 받아야 하는 상태
+
+### 결과
+
+- StatePattern을 사용함으로서 상태애 대해 일일히 if 조건문을 통해 현재 상태를 확인하지 않고도 전이에 대해 수행을 하도록 
+할 수 있다.
+- 추가적인 상태가 발생하더라도 코드의 변경을 최소화 할 수 있다.
+
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/42247724/142576503-8a7bbace-62fd-4075-84cc-ea1616a1c09f.gif)
 
 ---
 
-## 11. Pattern
+## 12. Pattern
 
 ### 코드
 

@@ -13,8 +13,9 @@
 9. [Adapter Pattern](#8-adapter-pattern)
 10. [Facade Pattern](#9-facade-pattern)
 11. [Command Pattern](#10-command-pattern)
-12. []()
+12. [State Pattern](#11-state-pattern)
 13. []()
+14. []()
 
 ## 1. Polymorphism
 

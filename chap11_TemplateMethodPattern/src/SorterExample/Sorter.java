@@ -1,3 +1,5 @@
+package SorterExample;
+
 public interface Sorter {
 
     int compare(Object i, Object j);

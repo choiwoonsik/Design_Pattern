@@ -1,3 +1,5 @@
+package SorterExample;
+
 public class AgeSorter implements Sorter {
     @Override
     public int compare(Object i, Object j) {

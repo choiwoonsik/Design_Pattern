@@ -1,3 +1,5 @@
+package SorterExample;
+
 public class Person{
 	private int age;
 	private String name;
@@ -17,6 +19,6 @@ public class Person{
 
 	@Override
 	public String toString() {
-		return "Person [age=" + age + ", name=" + name + "]";
+		return "SorterExample.Person [age=" + age + ", name=" + name + "]";
 	}
 }

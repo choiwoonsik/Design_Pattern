@@ -14,7 +14,7 @@
 10. [Facade Pattern](#9-facade-pattern)
 11. [Command Pattern](#10-command-pattern)
 12. [State Pattern](#11-state-pattern)
-13. []()
+13. [Template Method Pattern](#12-template-method-pattern)
 14. []()
 
 ## 1. Polymorphism
@@ -2112,7 +2112,306 @@ public class calculate implements STATE{
 
 ---
 
-## 12. Pattern
+## 12. Template Method Pattern
+
+#### 목적
+- 알고리즘의 뼈대를 정의하고 일부를 서브 클래스에 위임한다. 이렇게 함으로서 알고리즘의 구조를 변경하지 않고 알고리즘의
+일부 내용을 서브 클래스에서 재정의 할 수 있도록 한다.
+- 많은 방식의 알고리즘을 각각 캡슐화시키면서 **중복되는 코드가 여러 클래스에 존재**하게 된다. -> 중복 코드의 문제.
+- 이를 해결하기 위해 알고리즘의 중복되는 부분을 부모 클래스에 캡슐화시키고 **달라지는 부분만 서브클래스에서 구현**하게 한다.
+- 결과적으로 중복되는 코드를 줄일 수 있고, 한 곳에서 관리하게 되므로 유지 보수에 유리하다.
+
+#### 예
+카페 예시)
+카페에서 커피를 만드는 것과 차를 만드는 과정을 봐보자.
+물을 끓이고 -> 뜨거운 물에 (차, 커피)를 우려내고 -> (차, 커피)를 (일회용, 다회용)컵에 따르고 
+-> 커피의 경우 (설탕, 우유, 샷)을 차의 경우 (레몬) 등의 토핑을 추가한다. -> 완성 후 제공한다. 
+이렇게 음료를 만들고 제공하는 전체적인 알고리즘(구조, 틀)은 동일하면서 커피 or 티에 따라 내용이 달라지거나 공통으로 적용되는
+부분들이 존재한다.
+따라서 해당 부분들은 전부 하나의 부모 클래스에서 구현하고 달라지는 부분만 각자의 서브 클래스에서 구현하게 할 수 있다.
+
+정렬 예시)
+이름과 나이 정보가 있는 사람들에 대해서 정렬한다고 해보자. 이때 선택사항으로는 이름 or 나이로 정렬할 수 있다. 정렬 시
+버블 정렬을 한다면 정렬 알고리즘의 방식은 동일하지만 비교하는 부분만 다르다. 따라서 각 서브 클래스에서 맞는 비교를
+구현하게 하고 정렬을 하는 과정은 부모 클래스에서 구현하게 하여 코드의 중복은 줄이면서 한곳에서 관리하게 할 수 있다.
+
+### 카페 예제 코드
+- 커피와 차 중에서 고르게 한다.
+- CafeBeverageMaker abstract 클래스를 만들고 여기서 알고리즘을 관리한다.
+  - coffee, tea 클래는 추상 클래스를 상속받아서 구현한다.
+- CafeBeverageMaker에 정의 된 음료 제저 알고리즘을 따르면서 각 음료에 맞게 재정의하는 구조이다.
+
+#### Main.class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/Main.java#L18)
+```java
+public class Main {
+    public static void main(String[] args) throws IOException {
+        CafeBeverageMaker cafe;
+        System.out.println("Hi~ 여기는 woonsik Cafe 입니다!\n");
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("메뉴를 골라주세요. (coffee, tea)");
+        String s = br.readLine();
+        if (s.equals("coffee")) {
+            System.out.println("[커피 주문 시작]");
+            cafe = new Coffee();
+            cafe.prepareBeverage();
+        } else if (s.equals("tea")) {
+            System.out.println("[티 주문 시작]");
+            cafe = new Tea();
+            cafe.prepareBeverage();
+        } else {
+            System.out.println("없는 메뉴입니다.");
+        }
+    }
+}
+```
+
+#### CafeBeverageMaker abstract class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/CafeBeverageMaker.java#L7)
+- 공통으로 필요로 하는 부분은 여기서 통합 관리한다.
+- 각 부분에 맞게 재정의가 필요한 부분은 abstract 메소드로 선언한다.
+```java
+public abstract class CafeBeverageMaker {
+    public final void prepareBeverage() {
+        boilWater();
+        brew();
+        if (takeIn()) {
+            pourInTakeOutCup();
+        } else {
+            pourInCup();
+        }
+        if (customTopping())
+            addTopping();
+        finish();
+    }
+
+    public abstract void brew();
+
+    public abstract boolean customTopping();
+
+    public abstract void addTopping();
+
+    public void lemon() {
+        System.out.println("레몬을 추가할까요?");
+    }
+
+    public void milk() {
+        System.out.println("우유를 추가할까요?");
+    }
+
+    public void sugar() {
+        System.out.println("설탕을 추가할까요?");
+    }
+
+    public void shot() {
+        System.out.println("샷을 추가할까요?");
+    }
+
+    public void boilWater() {
+        System.out.println("물을 끓입니다.");
+    }
+
+    public boolean takeIn() {
+        System.out.println("테이크 아웃입니까? (y/n)");
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            return br.readLine().equals("y");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public void pourInCup() {
+        System.out.println("유리컵에 음료를 따릅니다.");
+    }
+
+    public void pourInTakeOutCup() {
+        System.out.println("일회용컵에 음료를 따릅니다.");
+    }
+
+    public void finish() {
+        System.out.println("음료가 준비되었습니다. 맛있게 드세요 :)");
+    }
+
+    public String input() {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            return br.readLine().substring(0, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "n";
+    }
+}
+```
+
+#### Coffee.class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/Coffee.java#L7)
+```java
+public class Coffee extends CafeBeverageMaker {
+
+    @Override
+    public void brew() {
+        System.out.println("커피원두를 우려냅니다.");
+    }
+
+    @Override
+    public boolean customTopping() {
+        System.out.println("추가 옵션을 선택하시겠습니까?");
+        return input().equals("y");
+    }
+
+    @Override
+    public void addTopping() {
+        milk();
+        if (input().equals("y")) System.out.println("우유 추가...");
+        sugar();
+        if (input().equals("y")) System.out.println("설탕 추가...");
+        shot();
+        if (input().equals("y")) System.out.println("샷 추가...");
+    }
+}
+```
+
+#### Tea.class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/Tea.java#L3)
+```java
+public class Tea extends CafeBeverageMaker {
+    @Override
+    public void brew() {
+        System.out.println("1: 우롱티 2: 보리티 3: 녹차티 4: 보스니아티 5: 티티");
+        switch (Integer.parseInt(input())) {
+            case 1:
+                System.out.println("우롱티를 우립니다.");
+                break;
+            case 2:
+                System.out.println("보리티를 우립니다.");
+                break;
+            case 3:
+                System.out.println("녹차티를 우립니다.");
+                break;
+            case 4:
+                System.out.println("보스니아티를 우립니다.");
+                break;
+            case 5:
+                System.out.println("TT ~ TT");
+                break;
+            default:
+                System.out.println("메뉴에 없는 주문입니다. 탈락~ 빵!");
+        }
+    }
+
+    @Override
+    public boolean customTopping() {
+        System.out.println("추가 옵션을 선택하시겠습니까?");
+        return input().equals("y");
+    }
+
+    @Override
+    public void addTopping() {
+        lemon();
+        if (input().equals("y")) System.out.println("레몬을 올립니다...");
+    }
+}
+```
+이렇게 티와 커피를 같은 부분은 재사용하고 다른 부분은 재정의해서 동일한 알고리즘으로 음료를 제조할 수 있다. 
+
+### 이름/나이 정렬 예제 코드
+- 이름과 나이가 다른 사람을 나이 or 이름으로 정렬할 때 알고리즘의 동일한 틀은 유지하면서 비교 부분만 재정의할 수 있다.
+#### Main.class
+```java
+public class MainTest {
+	public static void main(String[] args) {
+		Person[] people = {
+			new Person(1002, "Bapple"),
+			new Person(1001, "People"),
+			new Person(1000, "Apple"),
+			new Person(3000, "Dooly"),
+			new Person(30, "Ddochi"),
+			new Person(25, "Michol"),
+			new Person(20000, "Douner"),
+			new Person(3, "HeeDong")
+		};
+		System.out.println("\noriginal people");
+		for (Person p : people) {
+			System.out.println(p);
+		}
+		
+		System.out.println("\nsort by Name");
+		Sorter sorter = new NameSorter();
+		sorter.bubbleSort(people);
+		for (Person p : people) {
+			System.out.println(p);
+		}
+		
+		System.out.println("\nsort by Age");
+		Sorter sorter2 = new AgeSorter();
+		sorter2.bubbleSort(people);
+		for (Person p : people) {
+			System.out.println(p);
+		}
+	}
+}
+```
+
+#### Sorter interface
+```java
+public interface Sorter {
+    int compare(Object i, Object j);
+    
+    default void bubbleSort(Object[] obj) {
+        for (int i = 0; i < obj.length - 1; i++) {
+            for (int j = i + 1; j < obj.length; j++) {
+                if (compare(obj[i], obj[j]) < 0) { // 재정의가 필요한 부분
+                    Object tmp = obj[i];
+                    obj[i] = obj[j];
+                    obj[j] = tmp;
+                }
+            }
+        }
+    }
+}
+```
+
+#### AgeSorter.class implements Sorter
+```java
+public class AgeSorter implements Sorter {
+    @Override
+    public int compare(Object i, Object j) {
+        return ((Person)j).getAge() - ((Person)i).getAge();
+    }
+}
+```
+#### NameSorter.class implements Sorter
+```java
+public class NameSorter implements Sorter {
+    @Override
+    public int compare(Object i, Object j) {
+        return ((Person)j).getName().compareTo(((Person)i).getName());
+    }
+}
+```
+
+### 다이어그램
+#### [커피 예제 다이어그램]
+<img width="488" alt="스크린샷 2021-11-27 오후 5 41 05" src="https://user-images.githubusercontent.com/42247724/143674597-3fc4a198-bf62-421b-878c-1b728a1954d5.png">
+
+#### [정렬 예제 다이어그램]
+<img width="550" alt="스크린샷 2021-11-27 오후 5 41 38" src="https://user-images.githubusercontent.com/42247724/143674598-a5b1619f-6811-47d8-9b9c-e24496e702c4.png">
+
+### 설명
+공통 알고리즘 부분은 부모 클래스에 두고 다르게 정의가 필요한 부분만 하위 클래스에서 재정의해서 사용한다. 큰틀은 
+상위 클래스에서 잡으므로 서브 클래스에서 재정의하더라도 그걸 사용할지 말지는 상위 클래스에게 달려있다. 
+상위 클래스에서 공통 부분을 통합 관리하므로 코드의 중복도 사라졌고, 역활에 맞는 부분만 정의되어서 코드 유지 관리에도 용이해졌다.
+
+### 결과
+#### [커피]
+<img width="363" alt="스크린샷 2021-11-27 오후 5 50 08" src="https://user-images.githubusercontent.com/42247724/143674863-0841a26f-fc6c-4d60-8cf5-0665059d4442.png">
+
+#### [정렬]
+<img width="363" alt="스크린샷 2021-11-27 오후 5 48 49" src="https://user-images.githubusercontent.com/42247724/143674844-00381ad3-010a-42ac-9e29-32e536e0fba6.png">
+
+---
+
+## 13.
 
 ### 코드
 

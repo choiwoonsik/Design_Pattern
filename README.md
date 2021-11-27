@@ -2139,7 +2139,7 @@ public class calculate implements STATE{
 - 커피와 차 중에서 고르게 한다.
 - CafeBeverageMaker abstract 클래스를 만들고 여기서 알고리즘을 관리한다.
   - coffee, tea 클래는 추상 클래스를 상속받아서 구현한다.
-- CafeBeverageMaker에 정의 된 음료 제저 알고리즘을 따르면서 각 음료에 맞게 재정의하는 구조이다.
+- CafeBeverageMaker에 정의 된 음료 제조 알고리즘을 따르면서 각 음료에 맞게 재정의하는 구조이다.
 
 #### Main.class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/Main.java#L18)
 ```java
@@ -2169,6 +2169,7 @@ public class Main {
 #### CafeBeverageMaker abstract class [링크](https://github.com/choiwoonsik/Design_Pattern/blob/main/chap11_TemplateMethodPattern/src/CafeExample/CafeBeverageMaker.java#L7)
 - 공통으로 필요로 하는 부분은 여기서 통합 관리한다.
 - 각 부분에 맞게 재정의가 필요한 부분은 abstract 메소드로 선언한다.
+
 ```java
 public abstract class CafeBeverageMaker {
     public final void prepareBeverage() {
@@ -2408,6 +2409,13 @@ public class NameSorter implements Sorter {
 
 #### [정렬]
 <img width="363" alt="스크린샷 2021-11-27 오후 5 48 49" src="https://user-images.githubusercontent.com/42247724/143674844-00381ad3-010a-42ac-9e29-32e536e0fba6.png">
+
+### Q. 전략패턴과 템플릿 메소드 패턴의 차이는 무엇일까?
+A. 어찌보면 상황에 따라 알고리즘을 변경하는 부분을 서브 클래스에 맡긴다는 측면에서 비슷할 수 있다. 하지만 서브 클래스에 맡기는 부분에서 규모의 차이가 있다.
+
+템플릿 메소드 패턴은 상속을 이용해서 알고리즘의 일부분만 서브 클래스에 맡기고 최대한 공통 부분은 템플릿, 즉 구조로 가져가는 것이다. 최대한 동일한 구조를 재사용하면서 다른 특정 부분만 서브클래스가 상속받아 재정의한다는 특징이 있다.
+
+스트래지 패턴은 템플릿 방식과 다르게 구현부분이 다른 알고리즘 마다, 즉 이름별로 정렬, 나이별로 정렬, 날짜별로 정렬 등등 알고리즘이 별도로 존재한다면 각 알고리즘을 캡슐화하여 생성한 후 필요한 알고리즘을 불러서 사용하는 방식이다.
 
 ---
 
